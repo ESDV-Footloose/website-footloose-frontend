@@ -1,0 +1,8 @@
+@import "tailwindcss";
+@import "./tailwind-config.css";
+
+html,
+body {
+  min-width: 300px;
+  scroll-behavior: smooth;
+}

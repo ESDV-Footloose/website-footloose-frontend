@@ -1,0 +1,9 @@
+/* Colors */
+@theme {
+  --color-footloose: #e41515;
+}
+
+/* Fonts */
+@theme {
+  --font-sourcesans: var(--font-source-sans-3);
+}
