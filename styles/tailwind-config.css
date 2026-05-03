@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 /* Colors */
 @theme {
   --color-footloose: #e41515;
