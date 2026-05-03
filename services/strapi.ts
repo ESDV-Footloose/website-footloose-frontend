@@ -60,7 +60,6 @@ export async function fetchAPI(endpoint: string, options: RequestInit = {}) {
 /**
  * Fetches navbar data from Strapi and displays it.
  *
- * @external
  * @returns Array of navigation items used by the Navbar component
  */
 export async function getNavbar(): Promise<NavItem[]> {

@@ -1,5 +1,5 @@
 {
-  "entryPoints": ["app", "components"],
+  "entryPoints": ["app", "components", "services"],
   "entryPointStrategy": "expand",
   "out": "docs",
   "excludePrivate": false,
