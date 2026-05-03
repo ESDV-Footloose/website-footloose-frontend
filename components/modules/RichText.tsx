@@ -4,83 +4,139 @@ import Link from "next/link";
 
 import Container from "@/components/containers/Container";
 
-type TextDecorationNode = {
-  type?: "text";
-  text: string;
-  code?: boolean;
-  bold?: boolean;
-  italic?: boolean;
-  underline?: boolean;
-  strikethrough?: boolean;
+/**
+ * Text node with optional inline formatting.
+ */
+export type TextDecorationNode = {
+  readonly type?: "text";
+  readonly text: string;
+  readonly code?: boolean;
+  readonly bold?: boolean;
+  readonly italic?: boolean;
+  readonly underline?: boolean;
+  readonly strikethrough?: boolean;
 };
 
-type LinkNode = {
-  type: "link";
-  url?: string;
-  children?: RichTextNode[];
+/**
+ * Link node inside rich text content.
+ */
+export type LinkNode = {
+  readonly type: "link";
+  readonly url?: string;
+  readonly children?: RichTextNode[];
 };
 
-type ListItemNode = {
-  type: "list-item";
-  children?: RichTextNode[];
+/**
+ * List item node inside ordered or unordered lists.
+ */
+export type ListItemNode = {
+  readonly type: "list-item";
+  readonly children?: RichTextNode[];
 };
 
-type NestedNode = {
-  type: string;
-  children?: RichTextNode[];
+/**
+ * Generic nested rich text node.
+ */
+export type NestedNode = {
+  readonly type: string;
+  readonly children?: RichTextNode[];
 };
 
-type RichTextNode = TextDecorationNode | LinkNode | ListItemNode | NestedNode;
+/**
+ * Inline rich text node.
+ */
+export type RichTextNode =
+  | TextDecorationNode
+  | LinkNode
+  | ListItemNode
+  | NestedNode;
 
-type ParagraphBlock = {
-  type: "paragraph";
-  children?: RichTextNode[];
+/**
+ * Paragraph block in rich text content.
+ */
+export type ParagraphBlock = {
+  readonly type: "paragraph";
+  readonly children?: RichTextNode[];
 };
 
-type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
+/**
+ * Supported heading levels.
+ */
+export type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
 
-type HeadingBlock = {
-  type: "heading";
-  level?: HeadingLevel;
-  children?: RichTextNode[];
+/**
+ * Heading block in rich text content.
+ */
+export type HeadingBlock = {
+  readonly type: "heading";
+  readonly level?: HeadingLevel;
+  readonly children?: RichTextNode[];
 };
 
-type ListBlock = {
-  type: "list";
-  format?: "ordered" | "unordered";
-  children?: ListItemNode[];
+/**
+ * Ordered or unordered list block in rich text content.
+ */
+export type ListBlock = {
+  readonly type: "list";
+  readonly format?: "ordered" | "unordered";
+  readonly children?: ListItemNode[];
 };
 
-type QuoteBlock = {
-  type: "quote";
-  children?: RichTextNode[];
+/**
+ * Quote block in rich text content.
+ */
+export type QuoteBlock = {
+  readonly type: "quote";
+  readonly children?: RichTextNode[];
 };
 
-type CodeBlock = {
-  type: "code";
-  children?: TextDecorationNode[];
+/**
+ * Code block in rich text content.
+ */
+export type CodeBlock = {
+  readonly type: "code";
+  readonly children?: TextDecorationNode[];
 };
 
-type RichTextImage = {
-  url: string;
-  alternativeText: string;
-  width: number;
-  height: number;
-  caption?: string;
+/**
+ * Image data used by an image block.
+ */
+export type RichTextImage = {
+  readonly url: string;
+  readonly alternativeText: string;
+  readonly width: number;
+  readonly height: number;
+  readonly caption?: string;
 };
 
-type ImageBlock = {
-  type: "image";
-  image?: RichTextImage;
+/**
+ * Image block in rich text content.
+ */
+export type ImageBlock = {
+  readonly type: "image";
+  readonly image?: RichTextImage;
 };
 
-type RichTextBlock =
+/**
+ * Rich text block supported by the renderer.
+ */
+export type RichTextBlock =
   | ParagraphBlock
   | HeadingBlock
   | ListBlock
   | QuoteBlock
   | CodeBlock
   | ImageBlock;
+
+/**
+ * Properties passed to the rich text component.
+ */
+export type RichTextProps = {
+  /**
+   * Rich text blocks rendered by the component.
+   */
+  readonly content: RichTextBlock[];
+};
 
 const titleSizeClasses = {
   1: "text-4xl md:text-5xl font-semibold",
@@ -93,9 +149,10 @@ const titleSizeClasses = {
 
 /**
  * Render a single text-decoration node into React output.
- * @param {TextDecorationNode} node The text node with formatting flags
- * @param {React.Key} key React key for the returned element
- * @returns {React.ReactNode} The rendered text node with appropriate HTML tags for formatting, or a line break if the text is a newline character.
+ *
+ * @param node Text node with formatting flags.
+ * @param key React key for the returned element.
+ * @returns Rendered text node.
  */
 function renderTextDecoration(node: TextDecorationNode, key: React.Key) {
   if (node.text === "\n") return <br key={key} />;
@@ -112,9 +169,10 @@ function renderTextDecoration(node: TextDecorationNode, key: React.Key) {
 }
 
 /**
- * Render an array of pieces (nodes) of text, where every index contains the same formatting.
- * @param {RichTextNode[] | undefined} children Array of text nodes, split on different formatting.
- * @returns {React.ReactNode | null} Rendered inline content or null if the input is not a valid array of nodes.
+ * Render inline rich text nodes.
+ *
+ * @param children Inline rich text nodes to render.
+ * @returns Rendered inline content, or null when the input is invalid.
  */
 function renderTextContent(children?: RichTextNode[]) {
   if (!Array.isArray(children)) return null;
@@ -156,22 +214,17 @@ function renderTextContent(children?: RichTextNode[]) {
 }
 
 /**
- * Render a single rich text block. A block represents one of the following:
- * - Paragraph
- * - Heading (levels 1-6)
- * - Ordered list
- * - Unordered list
- * - Quote
- * - Code block
- * - Image
- * @param {RichTextBlock} block Block node to render.
- * @param {React.Key} key React key for the block element.
- * @returns {React.ReactNode | null} Rendered block element or null if the block type is unrecognized or invalid.
+ * Render a single rich text block.
+ *
+ * @param block Rich text block to render.
+ * @param key React key for the returned element.
+ * @returns Rendered block element, or null when the block is invalid.
  */
 function renderBlock(block: RichTextBlock, key: React.Key) {
   switch (block.type) {
     case "paragraph":
       return <p key={key}>{renderTextContent(block.children)}</p>;
+
     case "heading": {
       const level = block.level ?? 2;
       const Tag = `h${level}` as keyof React.JSX.IntrinsicElements;
@@ -182,6 +235,7 @@ function renderBlock(block: RichTextBlock, key: React.Key) {
         </Tag>
       );
     }
+
     case "list": {
       const items = block.children ?? [];
 
@@ -203,6 +257,7 @@ function renderBlock(block: RichTextBlock, key: React.Key) {
         </ul>
       );
     }
+
     case "quote":
       return (
         <blockquote
@@ -212,6 +267,7 @@ function renderBlock(block: RichTextBlock, key: React.Key) {
           {renderTextContent(block.children)}
         </blockquote>
       );
+
     case "code":
       return (
         <pre
@@ -221,9 +277,12 @@ function renderBlock(block: RichTextBlock, key: React.Key) {
           <code>{(block.children ?? []).map((c) => c.text).join("")}</code>
         </pre>
       );
+
     case "image": {
       const image = block.image;
+
       if (!image?.url || !image?.width || !image?.height) return null;
+
       return (
         <figure key={key} className="my-6">
           <Image
@@ -246,11 +305,12 @@ function renderBlock(block: RichTextBlock, key: React.Key) {
 }
 
 /**
- * Render the RichText component from Strapi.
- * @param {{ content: RichTextBlock[] }} props The content prop containing the rich text component, consisting of an array of rich text blocks.
- * @returns {JSX.Element} The rendered RichText component wrapped in a container.
+ * Render rich text content from Strapi.
+ *
+ * @param richTextProps Properties passed to the rich text component.
+ * @returns The rendered rich text component.
  */
-export default function RichText({ content }: { content: RichTextBlock[] }) {
+export default function RichText({ content }: RichTextProps) {
   return (
     <Container>
       {content.map((block, key: React.Key) => renderBlock(block, key))}

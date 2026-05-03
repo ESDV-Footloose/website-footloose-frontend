@@ -1,0 +1,9 @@
+{
+  "entryPoints": ["app", "components"],
+  "entryPointStrategy": "expand",
+  "out": "docs",
+  "excludePrivate": false,
+  "excludeProtected": false,
+  "excludeInternal": false,
+  "readme": "README.md"
+}

@@ -4,6 +4,9 @@ import BigBanner from "@/components/modules/BigBanner";
 
 import bannerImage from "@/assets/img/header-home.jpg";
 
+/**
+ * Metadata for the homepage.
+ */
 export const metadata: Metadata = {
   title: "Home | ESDV Footloose",
   description:
@@ -12,7 +15,8 @@ export const metadata: Metadata = {
 
 /**
  * Homepage for the website.
- * @returns {React.Fragment} The homepage component.
+ *
+ * @returns The homepage component.
  */
 export default function Home() {
   return (

@@ -8,16 +8,22 @@ const sourceSans3 = Source_Sans_3({
 });
 
 /**
- * The root layout for the application.
- * @param {object} props The properties passed to this component.
- * @param {React.Fragment} props.children The page content rendered inside the layout.
- * @returns {React.Fragment} The RootLayout component.
+ * Properties passed to the root layout.
  */
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export type RootLayoutProps = {
+  /**
+   * Page content rendered inside the layout.
+   */
+  readonly children: React.ReactNode;
+};
+
+/**
+ * The root layout for the application.
+ *
+ * @param rootLayoutProps Properties passed to the root layout.
+ * @returns The root layout component.
+ */
+export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en" className={`${sourceSans3.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col font-sourcesans">
