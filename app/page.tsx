@@ -19,11 +19,14 @@ export default async function Home() {
   return (
     <>
       <Navbar links={navbar} />
-      <BigBanner
-        img={bannerImage}
-        imgAlt="Footloose grouphug"
-        boardSlogan="Dance the night away!"
-      />
+      <main>
+        {/* Initial view banner */}
+        <BigBanner
+          img={bannerImage}
+          imgAlt="Footloose grouphug"
+          boardSlogan="Dance the night away!"
+        />
+      </main>
     </>
   );
 }
