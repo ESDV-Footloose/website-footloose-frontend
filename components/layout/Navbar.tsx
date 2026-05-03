@@ -21,12 +21,15 @@ import Container from "@/components/containers/Container";
 import Button from "@/components/modules/Button";
 
 import Logo from "@/assets/svg/logo-no-txt.svg";
+import type { NavItem, MenuSection } from "@/types/navbar";
 
 /**
  * The main site navigation bar with desktop and mobile navigation.
+ * @param {object} props The properties passed to this component.
+ * @param {NavItem[]} props.links The navigation links to display.
  * @returns {React.Fragment} The Navbar component.
  */
-const Navbar = () => {
+const Navbar = ({ links }: { links: NavItem[] }) => {
   const [scrolled, setScrolled] = useState(false);
   const { scrollY } = useScroll();
 
@@ -50,10 +53,10 @@ const Navbar = () => {
             <Logo className="h-8 w-auto" />
           </Link>
           <div className="hidden gap-6 lg:flex">
-            <Links />
+            <Links links={links} />
             <CTAs scrolled={scrolled} />
           </div>
-          <MobileMenu />
+          <MobileMenu links={links} />
         </div>
       </Container>
     </nav>
@@ -62,9 +65,11 @@ const Navbar = () => {
 
 /**
  * The desktop navigation links.
+ * @param {object} props The properties passed to this component.
+ * @param {NavItem[]} props.links The navigation links to display.
  * @returns {React.Fragment} The Links component.
  */
-const Links = () => {
+const Links = ({ links = [] }: { links?: NavItem[] }) => {
   return (
     <div className="flex items-center gap-6">
       {links.map((l) => (
@@ -74,25 +79,6 @@ const Links = () => {
       ))}
     </div>
   );
-};
-
-type MenuLink = {
-  text: string;
-  href: string;
-};
-
-type MenuSection = {
-  title?: {
-    text: string;
-    href?: string;
-  };
-  links: MenuLink[];
-};
-
-type NavItem = {
-  text: string;
-  href: string;
-  menu?: MenuSection[];
 };
 
 /**
@@ -289,9 +275,11 @@ const MobileMenuLink = ({
 
 /**
  * The mobile slide-out navigation menu.
+ * @param {object} props The properties passed to this component.
+ * @param {NavItem[]} props.links The navigation links to display.
  * @returns {React.Fragment} The MobileMenu component.
  */
-const MobileMenu = () => {
+const MobileMenu = ({ links = [] }: { links?: NavItem[] }) => {
   const [open, setOpen] = useState(false);
   return (
     <div className="block lg:hidden">
@@ -336,234 +324,3 @@ const MobileMenu = () => {
 };
 
 export default Navbar;
-
-const links: NavItem[] = [
-  {
-    text: "Events",
-    href: "/events/",
-  },
-  {
-    text: "Association",
-    href: "/welcome-to-footloose/",
-    menu: [
-      {
-        title: {
-          text: "Learn about Footloose",
-          href: "/welcome-to-footloose/",
-        },
-        links: [
-          {
-            text: "What is Footloose?",
-            href: "/welcome-to-footloose/",
-          },
-          {
-            text: "Dinner in Luna",
-            href: "https://dining.studentencultuur.nl/",
-          },
-          {
-            text: "Yearplanning",
-            href: "/agenda-and-planning/",
-          },
-          {
-            text: "Photos",
-            href: "https://photos.esdvfootloose.nl/",
-          },
-          {
-            text: "Videos",
-            href: "/videos/",
-          },
-          {
-            text: "Merchandise",
-            href: "/merchandise/",
-          },
-          {
-            text: "SHOWCASE 2024",
-            href: "/showcase-2024/",
-          },
-        ],
-      },
-      {
-        title: {
-          text: "Association Documents",
-          href: "/association-documents/",
-        },
-        links: [
-          {
-            text: "Declaration form",
-            href: "/declaration-forms/",
-          },
-          {
-            text: "Templates and Logos",
-            href: "/templates-and-logos/",
-          },
-        ],
-      },
-    ],
-  },
-  {
-    text: "Community",
-    href: "/committees/",
-    menu: [
-      {
-        title: { text: "Community Info", href: "/community-info/" },
-        links: [
-          {
-            text: "The Board",
-            href: "/the-board/",
-          },
-          {
-            text: "Previous boards",
-            href: "/previous-boards/",
-          },
-          {
-            text: "Committees",
-            href: "/committees/",
-          },
-          {
-            text: "Volunteers",
-            href: "/volunteers/",
-          },
-          {
-            text: "Jukebox Journal",
-            href: "/jukebox-journal/",
-          },
-          {
-            text: "Confidential Contact Person",
-            href: "/confidential-contact-person/",
-          },
-          {
-            text: "SALT – The Scala Newsletter",
-            href: "/salt-the-scala-newsletter/",
-          },
-          {
-            text: "Minecraft server",
-            href: "/minecraft-server/",
-          },
-        ],
-      },
-    ],
-  },
-  {
-    text: "Dancing",
-    href: "/dance-courses/",
-    menu: [
-      {
-        title: { text: "Dance Info", href: "/dance-info/" },
-        links: [
-          {
-            text: "Membership and course fees",
-            href: "/membership-and-course-fees/",
-          },
-          {
-            text: "Subscribe for dance courses",
-            href: "/subscribe-for-dance-courses/",
-          },
-          {
-            text: "Dance groups",
-            href: "/dance-groups/",
-          },
-          {
-            text: "Timetable of dance classes",
-            href: "/timetable/",
-          },
-          {
-            text: "Hall Reservations",
-            href: "/hall-reservations/",
-          },
-        ],
-      },
-      {
-        title: { text: "Dance courses", href: "/dance-courses/" },
-        links: [
-          { text: "Ballroom", href: "/ballroom/" },
-          { text: "Bachata Sensual", href: "/bachata-sensual/" },
-          { text: "Classical Ballet", href: "/classical-ballet/" },
-          { text: "Feminine", href: "/feminine/" },
-          { text: "Hiphop", href: "/hiphop/" },
-          { text: "Improvisation", href: "/improvisation/" },
-          { text: "Jazz", href: "/jazz/" },
-          { text: "Kizomba", href: "/kizomba/" },
-          { text: "Modern", href: "/modern/" },
-          { text: "Salsa", href: "/salsa/" },
-        ],
-      },
-      {
-        title: { text: "Competitions", href: "/competitions/" },
-        links: [
-          { text: "BRADO", href: "/brado/" },
-          { text: "ETDS", href: "/etds/" },
-          { text: "NTDS", href: "/ntds/" },
-        ],
-      },
-    ],
-  },
-  {
-    text: "Collaboration",
-    href: "/collaborations/",
-    menu: [
-      {
-        title: { text: "Collaborations Info", href: "/collaborations/" },
-        links: [
-          {
-            text: "Book a workshop",
-            href: "/workshops/",
-          },
-          {
-            text: "Collaborations",
-            href: "/collaborations/",
-          },
-          {
-            text: "Sister associations",
-            href: "/sister-associations/",
-          },
-          {
-            text: "Partners",
-            href: "/partners/",
-          },
-        ],
-      },
-    ],
-  },
-  {
-    text: "About",
-    href: "/contact/",
-    menu: [
-      {
-        title: { text: "About Info", href: "/about-info/" },
-        links: [
-          {
-            text: "Contact",
-            href: "/contact/",
-          },
-          {
-            text: "FAQs",
-            href: "/faqs/",
-          },
-        ],
-      },
-    ],
-  },
-  {
-    text: "My Account",
-    href: "/account/",
-    menu: [
-      {
-        title: { text: "Account Info", href: "/account-info/" },
-        links: [
-          {
-            text: "My Profile",
-            href: "/user/",
-          },
-          {
-            text: "My Bookings",
-            href: "/events/my-bookings/",
-          },
-          {
-            text: "Logout",
-            href: "/logout/",
-          },
-        ],
-      },
-    ],
-  },
-];

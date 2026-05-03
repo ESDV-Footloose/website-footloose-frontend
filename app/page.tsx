@@ -1,8 +1,11 @@
 import { Metadata } from "next";
 
 import BigBanner from "@/components/modules/BigBanner";
+import Navbar from "@/components/layout/Navbar";
 
 import bannerImage from "@/assets/img/header-home.jpg";
+
+import { getNavbar } from "@/services/strapi";
 
 export const metadata: Metadata = {
   title: "Home | ESDV Footloose",
@@ -10,14 +13,12 @@ export const metadata: Metadata = {
     "Welcome to Eindhovense Studenten Dans Vereniging Footloose. We are the student dance association of Eindhoven, and we organize various dance activities for students.",
 };
 
-/**
- * Homepage for the website.
- * @returns {React.Fragment} The homepage component.
- */
-export default function Home() {
+export default async function Home() {
+  const navbar = await getNavbar();
+
   return (
     <>
-      {/* Initial view banner */}
+      <Navbar links={navbar} />
       <BigBanner
         img={bannerImage}
         imgAlt="Footloose grouphug"
