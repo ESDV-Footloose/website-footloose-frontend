@@ -164,7 +164,6 @@ export type MobileMenuLinkProps = {
 /**
  * Main site navigation bar with desktop and mobile navigation.
  *
- * @external
  * @param links Navigation structure used to build all menu items and dropdowns.
  * @returns The navbar component.
  */
