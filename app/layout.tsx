@@ -1,8 +1,11 @@
 import { Source_Sans_3 } from "next/font/google";
 import "@/styles/globals.css";
-import Navbar from "@/components/layout/Navbar";
+import { Navbar } from "@/components/layout/Navbar";
 import { getNavbar } from "@/services/strapi";
 
+/**
+ * Google Font configuration for Source Sans 3.
+ */
 const sourceSans3 = Source_Sans_3({
   variable: "--font-source-sans-3",
   subsets: ["latin"],

@@ -164,9 +164,11 @@ export type MobileMenuLinkProps = {
 /**
  * Main site navigation bar with desktop and mobile navigation.
  *
+ * @external
+ * @param links Navigation structure used to build all menu items and dropdowns.
  * @returns The navbar component.
  */
-const Navbar = ({ links }: { links: NavItem[] }) => {
+export const Navbar = ({ links }: { links: NavItem[] }) => {
   const [scrolled, setScrolled] = useState(false);
   const { scrollY } = useScroll();
 
@@ -202,7 +204,7 @@ const Navbar = ({ links }: { links: NavItem[] }) => {
 };
 
 /**
- * Desktop navigation links.
+ * Desktop navigation links. Renders a horizontal list of navigation items.
  *
  * @internal
  * @returns The desktop links component.
@@ -220,7 +222,7 @@ export const Links = ({ links = [] }: { links?: NavItem[] }) => {
 };
 
 /**
- * Single navigation link with an optional flyout menu.
+ * Single navigation link with an optional flyout menu. Opens a dropdown menu on hover.
  *
  * @internal
  * @param navLinkProps Properties passed to the navigation link component.
@@ -405,6 +407,7 @@ export const MobileMenuLink = ({
  * Mobile slide-out navigation menu.
  *
  * @internal
+ * @param links Navigation structure used to build mobile menu items.
  * @returns The mobile menu component.
  */
 export const MobileMenu = ({ links = [] }: { links?: NavItem[] }) => {
@@ -454,5 +457,3 @@ export const MobileMenu = ({ links = [] }: { links?: NavItem[] }) => {
     </div>
   );
 };
-
-export default Navbar;
