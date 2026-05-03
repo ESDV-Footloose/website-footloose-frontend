@@ -16,13 +16,13 @@ export const metadata: Metadata = {
  */
 export default function Home() {
   return (
-    <>
+    <main>
       {/* Initial view banner */}
       <BigBanner
         img={bannerImage}
         imgAlt="Footloose grouphug"
         boardSlogan="Dance the night away!"
       />
-    </>
+    </main>
   );
 }
