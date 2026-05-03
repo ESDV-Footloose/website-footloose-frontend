@@ -1,6 +1,7 @@
 import { Source_Sans_3 } from "next/font/google";
 import "@/styles/globals.css";
 import Navbar from "@/components/layout/Navbar";
+import { getNavbar } from "@/services/strapi";
 
 const sourceSans3 = Source_Sans_3({
   variable: "--font-source-sans-3",
@@ -23,11 +24,12 @@ export type RootLayoutProps = {
  * @param rootLayoutProps Properties passed to the root layout.
  * @returns The root layout component.
  */
-export default function RootLayout({ children }: RootLayoutProps) {
+export default async function RootLayout({ children }: RootLayoutProps) {
+  const navbar = await getNavbar();
   return (
     <html lang="en" className={`${sourceSans3.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col font-sourcesans">
-        <Navbar />
+        <Navbar links={navbar} />
         {children}
       </body>
     </html>

@@ -18,7 +18,7 @@ export const metadata: Metadata = {
  *
  * @returns The homepage component.
  */
-export default function Home() {
+export default async function Home() {
   return (
     <main>
       {/* Initial view banner */}
