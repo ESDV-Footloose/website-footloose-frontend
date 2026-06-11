@@ -1,5 +1,6 @@
 import "server-only";
 import type { NavItem } from "@/components/layout/Navbar";
+import type { RichTextBlock } from "@/components/modules/RichText";
 
 /**
  * Where to locate the website or development server.
@@ -31,6 +32,90 @@ export type StrapiComponent = {
    * If the component is a dropdown, the navigation items it contains. Is empty for a single link.
    */
   items?: StrapiComponent[];
+};
+
+/**
+ * Generic Strapi section structure
+ *
+ * @internal
+ */
+export type StrapiSection = {
+  /**
+   * The section component.
+   */
+  __component: "page.section";
+  /**
+   * The rich text content.
+   */
+  content: RichTextBlock[];
+};
+
+/**
+ * Strapi small banner structure.
+ *
+ * @internal
+ */
+export type StrapiSmallBanner = {
+  /**
+   * The banner component.
+   */
+  __component: "page.banner";
+  /**
+   * The title displayed on the banner.
+   */
+  title: string;
+  /**
+   * Optional background image.
+   *  */
+  backgroundImage?: {
+    /**
+     * Image URL.
+     */
+    url: string;
+    /**
+     * Alt text for the image.
+     */
+    alternativeText: string | null;
+    /**
+     * Image width in pixels.
+     */
+    width: number;
+    /**
+     * Image height in pixels.
+     */
+    height: number;
+  };
+};
+
+/**
+ * Union of all possible page section components.
+ *
+ * @internal
+ */
+export type StrapiPageSection = StrapiSection | StrapiSmallBanner;
+
+/**
+ * Strapi page structure.
+ *
+ * @internal
+ */
+export type StrapiPage = {
+  /**
+   * The page title.
+   */
+  title: string;
+  /**
+   * The page slug used in the URL.
+   */
+  slug: string;
+  /**
+   * Optional meta description.
+   */
+  metaDescription?: string;
+  /**
+   * Ordered list of page sections.
+   */
+  pageSections: StrapiSection[];
 };
 
 /**
@@ -108,4 +193,53 @@ export function mapNavbar(items: StrapiComponent[]): NavItem[] {
       href: "#",
     };
   });
+}
+
+/**
+ * Fetches a page by slug from Strapi and maps its sections into typed structures.
+ *
+ * @internal
+ * @param slug The page slug to fetch.
+ * @returns Typed page data, or null when no matching page is found.
+ */
+export async function getPage(slug: string): Promise<StrapiPage | null> {
+  const res = await fetchAPI(
+    `pages?filters[slug][$eq]=${slug}&populate[pageSections][populate]=*`,
+  );
+
+  const item = res?.data?.[0];
+  if (!item) return null;
+
+  const pageSections = (item.pageSections ?? []).map(
+    (section: StrapiPageSection) => {
+      if (section.__component === "page.section") {
+        return {
+          ...section,
+          content: Array.isArray((section as StrapiSection).content)
+            ? (section as StrapiSection).content
+            : [],
+        };
+      }
+      if (section.__component === "page.banner") {
+        const banner = section as StrapiSmallBanner;
+        return {
+          ...banner,
+          backgroundImage: banner.backgroundImage
+            ? {
+                ...banner.backgroundImage,
+                url: `${API_URL}${banner.backgroundImage.url}`,
+              }
+            : undefined,
+        };
+      }
+      return section;
+    },
+  );
+
+  return {
+    title: item.title,
+    slug: item.slug,
+    metaDescription: item.metaDescription,
+    pageSections,
+  };
 }
