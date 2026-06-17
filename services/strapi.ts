@@ -156,15 +156,16 @@ export type StrapiBigBanner = {
 };
 
 /**
- * Union of all possible home page sections.
+ * Union of all possible page section components, plus the big banner exclusive to the homepage.
+ *
+ * @internal
  */
-export type StrapiHomepageSection =
-  | StrapiSection
-  | StrapiSmallBanner
-  | StrapiBigBanner;
+export type StrapiHomepageSection = StrapiPageSection | StrapiBigBanner;
 
 /**
  * Structure of Strapi home page.
+ *
+ * @internal
  */
 export type StrapiHomepage = {
   /**
