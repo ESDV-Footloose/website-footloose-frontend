@@ -23,15 +23,156 @@ import Button from "@/components/modules/Button";
 import Logo from "@/assets/svg/logo-no-txt.svg";
 
 /**
- * The main site navigation bar with desktop and mobile navigation.
- * @returns {React.Fragment} The Navbar component.
+ * Link inside a dropdown menu section.
+ *
+ * @internal
  */
-const Navbar = () => {
+export type MenuLink = {
+  /**
+   * Visible link text.
+   */
+  readonly text: string;
+
+  /**
+   * Link destination.
+   */
+  readonly href: string;
+};
+
+/**
+ * Group of links inside a dropdown menu.
+ *
+ * @internal
+ */
+export type MenuSection = {
+  /**
+   * Optional title shown above the section links.
+   */
+  readonly title?: {
+    /**
+     * Visible title text.
+     */
+    readonly text: string;
+
+    /**
+     * Optional title destination.
+     */
+    readonly href?: string;
+  };
+
+  /**
+   * Links shown inside the section.
+   */
+  readonly links: MenuLink[];
+};
+
+/**
+ * Main navigation item.
+ *
+ * @internal
+ */
+export type NavItem = {
+  /**
+   * Visible navigation text.
+   */
+  readonly text: string;
+
+  /**
+   * Main link destination.
+   */
+  readonly href: string;
+
+  /**
+   * Optional dropdown menu sections.
+   */
+  readonly menu?: MenuSection[];
+};
+
+/**
+ * Properties passed to the navigation link component.
+ *
+ * @internal
+ */
+export type NavLinkProps = {
+  /**
+   * Visible link content.
+   */
+  readonly children: React.ReactNode;
+
+  /**
+   * Link destination.
+   */
+  readonly href?: string;
+
+  /**
+   * Optional flyout menu sections.
+   */
+  readonly menu?: MenuSection[];
+};
+
+/**
+ * Properties passed to the call-to-action component.
+ *
+ * @internal
+ */
+export type CTAsProps = {
+  /**
+   * Whether the navbar is in its scrolled state.
+   */
+  readonly scrolled?: boolean;
+};
+
+/**
+ * Properties passed to the dropdown component.
+ *
+ * @internal
+ */
+export type DropdownProps = {
+  /**
+   * Menu sections rendered inside the dropdown.
+   */
+  readonly menu: MenuSection[];
+};
+
+/**
+ * Properties passed to the mobile menu link component.
+ *
+ * @internal
+ */
+export type MobileMenuLinkProps = {
+  /**
+   * Visible link content.
+   */
+  readonly children: React.ReactNode;
+
+  /**
+   * Link destination.
+   */
+  readonly href: string;
+
+  /**
+   * Optional submenu sections.
+   */
+  readonly menu?: MenuSection[];
+
+  /**
+   * Setter used to close the mobile menu.
+   */
+  readonly setMenuOpen: React.Dispatch<React.SetStateAction<boolean>>;
+};
+
+/**
+ * Main site navigation bar with desktop and mobile navigation.
+ *
+ * @param links Navigation structure used to build all menu items and dropdowns.
+ * @returns The navbar component.
+ */
+export const Navbar = ({ links }: { links: NavItem[] }) => {
   const [scrolled, setScrolled] = useState(false);
   const { scrollY } = useScroll();
 
   useMotionValueEvent(scrollY, "change", (latest) => {
-    setScrolled(latest > 250 ? true : false);
+    setScrolled(latest > 250);
   });
 
   return (
@@ -49,11 +190,12 @@ const Navbar = () => {
           <Link href="/">
             <Logo className="h-8 w-auto" />
           </Link>
+
           <div className="hidden gap-6 lg:flex">
-            <Links />
+            <Links links={links} />
             <CTAs scrolled={scrolled} />
           </div>
-          <MobileMenu />
+          <MobileMenu links={links} />
         </div>
       </Container>
     </nav>
@@ -61,57 +203,31 @@ const Navbar = () => {
 };
 
 /**
- * The desktop navigation links.
- * @returns {React.Fragment} The Links component.
+ * Desktop navigation links. Renders a horizontal list of navigation items.
+ *
+ * @internal
+ * @returns The desktop links component.
  */
-const Links = () => {
+export const Links = ({ links = [] }: { links?: NavItem[] }) => {
   return (
     <div className="flex items-center gap-6">
-      {links.map((l) => (
-        <NavLink key={l.text} href={l.href} menu={l.menu}>
-          {l.text}
+      {links.map((link) => (
+        <NavLink key={link.text} href={link.href} menu={link.menu}>
+          {link.text}
         </NavLink>
       ))}
     </div>
   );
 };
 
-type MenuLink = {
-  text: string;
-  href: string;
-};
-
-type MenuSection = {
-  title?: {
-    text: string;
-    href?: string;
-  };
-  links: MenuLink[];
-};
-
-type NavItem = {
-  text: string;
-  href: string;
-  menu?: MenuSection[];
-};
-
 /**
- * A single navigation link with an optional flyout menu.
- * @param {object} props The properties passed to this component.
- * @param {React.Fragment} props.children The visible link text.
- * @param {string} props.href The link destination.
- * @param {MenuSection[]} props.menu Optional flyout menu sections.
- * @returns {React.Fragment} The NavLink component.
+ * Single navigation link with an optional flyout menu. Opens a dropdown menu on hover.
+ *
+ * @internal
+ * @param navLinkProps Properties passed to the navigation link component.
+ * @returns The navigation link component.
  */
-const NavLink = ({
-  children,
-  href,
-  menu,
-}: {
-  children: React.ReactNode;
-  href?: string;
-  menu?: MenuSection[];
-}) => {
+export const NavLink = ({ children, href, menu }: NavLinkProps) => {
   const [open, setOpen] = useState(false);
 
   const showFlyout = menu && open;
@@ -132,6 +248,7 @@ const NavLink = ({
           className="absolute -bottom-2 -left-2 -right-2 h-0.5 origin-left scale-x-0 bg-footloose transition-transform duration-300 ease-out"
         />
       </Link>
+
       <AnimatePresence>
         {showFlyout && (
           <motion.div
@@ -153,12 +270,13 @@ const NavLink = ({
 };
 
 /**
- * The membership call-to-action button.
- * @param {object} props The properties passed to this component.
- * @param {boolean} props.scrolled Whether the navbar is in its scrolled state.
- * @returns {React.Fragment} The CTAs component.
+ * Membership call-to-action button.
+ *
+ * @internal
+ * @param ctasProps Properties passed to the call-to-action component.
+ * @returns The call-to-action component.
  */
-const CTAs = ({ scrolled = false }: { scrolled?: boolean }) => {
+export const CTAs = ({ scrolled = false }: CTAsProps) => {
   return (
     <Button className={scrolled ? "" : "hover:border-white!"}>
       <FiUser />
@@ -168,12 +286,13 @@ const CTAs = ({ scrolled = false }: { scrolled?: boolean }) => {
 };
 
 /**
- * A desktop dropdown menu for grouped navigation links.
- * @param {object} props The properties passed to this component.
- * @param {MenuSection[]} props.menu The menu sections to render.
- * @returns {React.Fragment} The Dropdown component.
+ * Desktop dropdown menu for grouped navigation links.
+ *
+ * @internal
+ * @param dropdownProps Properties passed to the dropdown component.
+ * @returns The dropdown component.
  */
-const Dropdown = ({ menu }: { menu: MenuSection[] }) => {
+export const Dropdown = ({ menu }: DropdownProps) => {
   return (
     <div className="w-full relative z-20 lg:bg-white pt-6 lg:p-6 shadow-none lg:w-62.5 lg:shadow-md">
       <div className="grid grid-cols-2 lg:grid-cols-1 lg:gap-2">
@@ -190,6 +309,7 @@ const Dropdown = ({ menu }: { menu: MenuSection[] }) => {
               ) : (
                 <h3 className="font-semibold">{submenu.title.text}</h3>
               ))}
+
             {submenu.links.map((link, key_) => (
               <Link
                 href={link.href}
@@ -207,25 +327,18 @@ const Dropdown = ({ menu }: { menu: MenuSection[] }) => {
 };
 
 /**
- * A single mobile navigation link with optional expandable submenu.
- * @param {object} props The properties passed to this component.
- * @param {React.Fragment} props.children The visible link text.
- * @param {string} props.href The link destination.
- * @param {MenuSection[]} props.menu Optional submenu sections.
- * @param {React.Dispatch<React.SetStateAction<boolean>>} props.setMenuOpen Setter for the mobile menu state.
- * @returns {React.Fragment} The MobileMenuLink component.
+ * Single mobile navigation link with an optional expandable submenu.
+ *
+ * @internal
+ * @param mobileMenuLinkProps Properties passed to the mobile menu link component.
+ * @returns The mobile menu link component.
  */
-const MobileMenuLink = ({
+export const MobileMenuLink = ({
   children,
   href,
   menu,
   setMenuOpen,
-}: {
-  children: React.ReactNode;
-  href: string;
-  menu?: MenuSection[];
-  setMenuOpen: React.Dispatch<React.SetStateAction<boolean>>;
-}) => {
+}: MobileMenuLinkProps) => {
   const [ref, { height }] = useMeasure();
   const [open, setOpen] = useState(false);
 
@@ -237,14 +350,15 @@ const MobileMenuLink = ({
           onClick={() => setOpen((pv) => !pv)}
         >
           <a
-            onClick={(e) => {
-              e.stopPropagation();
+            onClick={(event) => {
+              event.stopPropagation();
               setMenuOpen(false);
             }}
             href={href}
           >
             {children}
           </a>
+
           <motion.div
             animate={{ rotate: open ? "180deg" : "0deg" }}
             transition={{
@@ -257,17 +371,18 @@ const MobileMenuLink = ({
         </div>
       ) : (
         <a
-          onClick={(e) => {
-            e.stopPropagation();
+          onClick={(event) => {
+            event.stopPropagation();
             setMenuOpen(false);
           }}
-          href="#"
+          href={href}
           className="flex w-full cursor-pointer items-center justify-between border-b border-neutral-300 py-6 text-start text-2xl font-semibold"
         >
           <span>{children}</span>
           <FiArrowRight />
         </a>
       )}
+
       {menu && (
         <motion.div
           initial={false}
@@ -288,16 +403,21 @@ const MobileMenuLink = ({
 };
 
 /**
- * The mobile slide-out navigation menu.
- * @returns {React.Fragment} The MobileMenu component.
+ * Mobile slide-out navigation menu.
+ *
+ * @internal
+ * @param links Navigation structure used to build mobile menu items.
+ * @returns The mobile menu component.
  */
-const MobileMenu = () => {
+export const MobileMenu = ({ links = [] }: { links?: NavItem[] }) => {
   const [open, setOpen] = useState(false);
+
   return (
     <div className="block lg:hidden">
       <button onClick={() => setOpen(true)} className="block text-3xl">
         <FiMenu />
       </button>
+
       <AnimatePresence>
         {open && (
           <motion.nav
@@ -313,18 +433,20 @@ const MobileMenu = () => {
                 <FiX className="text-3xl text-neutral-950" />
               </button>
             </div>
+
             <div className="h-screen overflow-y-scroll scrollbar-hide bg-neutral-100 p-6">
-              {links.map((l) => (
+              {links.map((link) => (
                 <MobileMenuLink
-                  key={l.text}
-                  href={l.href}
-                  menu={l.menu}
+                  key={link.text}
+                  href={link.href}
+                  menu={link.menu}
                   setMenuOpen={setOpen}
                 >
-                  {l.text}
+                  {link.text}
                 </MobileMenuLink>
               ))}
             </div>
+
             <div className="flex justify-end bg-neutral-950 p-6">
               <CTAs />
             </div>
@@ -334,236 +456,3 @@ const MobileMenu = () => {
     </div>
   );
 };
-
-export default Navbar;
-
-const links: NavItem[] = [
-  {
-    text: "Events",
-    href: "/events/",
-  },
-  {
-    text: "Association",
-    href: "/welcome-to-footloose/",
-    menu: [
-      {
-        title: {
-          text: "Learn about Footloose",
-          href: "/welcome-to-footloose/",
-        },
-        links: [
-          {
-            text: "What is Footloose?",
-            href: "/welcome-to-footloose/",
-          },
-          {
-            text: "Dinner in Luna",
-            href: "https://dining.studentencultuur.nl/",
-          },
-          {
-            text: "Yearplanning",
-            href: "/agenda-and-planning/",
-          },
-          {
-            text: "Photos",
-            href: "https://photos.esdvfootloose.nl/",
-          },
-          {
-            text: "Videos",
-            href: "/videos/",
-          },
-          {
-            text: "Merchandise",
-            href: "/merchandise/",
-          },
-          {
-            text: "SHOWCASE 2024",
-            href: "/showcase-2024/",
-          },
-        ],
-      },
-      {
-        title: {
-          text: "Association Documents",
-          href: "/association-documents/",
-        },
-        links: [
-          {
-            text: "Declaration form",
-            href: "/declaration-forms/",
-          },
-          {
-            text: "Templates and Logos",
-            href: "/templates-and-logos/",
-          },
-        ],
-      },
-    ],
-  },
-  {
-    text: "Community",
-    href: "/committees/",
-    menu: [
-      {
-        title: { text: "Community Info", href: "/community-info/" },
-        links: [
-          {
-            text: "The Board",
-            href: "/the-board/",
-          },
-          {
-            text: "Previous boards",
-            href: "/previous-boards/",
-          },
-          {
-            text: "Committees",
-            href: "/committees/",
-          },
-          {
-            text: "Volunteers",
-            href: "/volunteers/",
-          },
-          {
-            text: "Jukebox Journal",
-            href: "/jukebox-journal/",
-          },
-          {
-            text: "Confidential Contact Person",
-            href: "/confidential-contact-person/",
-          },
-          {
-            text: "SALT – The Scala Newsletter",
-            href: "/salt-the-scala-newsletter/",
-          },
-          {
-            text: "Minecraft server",
-            href: "/minecraft-server/",
-          },
-        ],
-      },
-    ],
-  },
-  {
-    text: "Dancing",
-    href: "/dance-courses/",
-    menu: [
-      {
-        title: { text: "Dance Info", href: "/dance-info/" },
-        links: [
-          {
-            text: "Membership and course fees",
-            href: "/membership-and-course-fees/",
-          },
-          {
-            text: "Subscribe for dance courses",
-            href: "/subscribe-for-dance-courses/",
-          },
-          {
-            text: "Dance groups",
-            href: "/dance-groups/",
-          },
-          {
-            text: "Timetable of dance classes",
-            href: "/timetable/",
-          },
-          {
-            text: "Hall Reservations",
-            href: "/hall-reservations/",
-          },
-        ],
-      },
-      {
-        title: { text: "Dance courses", href: "/dance-courses/" },
-        links: [
-          { text: "Ballroom", href: "/ballroom/" },
-          { text: "Bachata Sensual", href: "/bachata-sensual/" },
-          { text: "Classical Ballet", href: "/classical-ballet/" },
-          { text: "Feminine", href: "/feminine/" },
-          { text: "Hiphop", href: "/hiphop/" },
-          { text: "Improvisation", href: "/improvisation/" },
-          { text: "Jazz", href: "/jazz/" },
-          { text: "Kizomba", href: "/kizomba/" },
-          { text: "Modern", href: "/modern/" },
-          { text: "Salsa", href: "/salsa/" },
-        ],
-      },
-      {
-        title: { text: "Competitions", href: "/competitions/" },
-        links: [
-          { text: "BRADO", href: "/brado/" },
-          { text: "ETDS", href: "/etds/" },
-          { text: "NTDS", href: "/ntds/" },
-        ],
-      },
-    ],
-  },
-  {
-    text: "Collaboration",
-    href: "/collaborations/",
-    menu: [
-      {
-        title: { text: "Collaborations Info", href: "/collaborations/" },
-        links: [
-          {
-            text: "Book a workshop",
-            href: "/workshops/",
-          },
-          {
-            text: "Collaborations",
-            href: "/collaborations/",
-          },
-          {
-            text: "Sister associations",
-            href: "/sister-associations/",
-          },
-          {
-            text: "Partners",
-            href: "/partners/",
-          },
-        ],
-      },
-    ],
-  },
-  {
-    text: "About",
-    href: "/contact/",
-    menu: [
-      {
-        title: { text: "About Info", href: "/about-info/" },
-        links: [
-          {
-            text: "Contact",
-            href: "/contact/",
-          },
-          {
-            text: "FAQs",
-            href: "/faqs/",
-          },
-        ],
-      },
-    ],
-  },
-  {
-    text: "My Account",
-    href: "/account/",
-    menu: [
-      {
-        title: { text: "Account Info", href: "/account-info/" },
-        links: [
-          {
-            text: "My Profile",
-            href: "/user/",
-          },
-          {
-            text: "My Bookings",
-            href: "/events/my-bookings/",
-          },
-          {
-            text: "Logout",
-            href: "/logout/",
-          },
-        ],
-      },
-    ],
-  },
-];
