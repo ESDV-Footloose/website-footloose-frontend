@@ -119,6 +119,61 @@ export type StrapiPage = {
 };
 
 /**
+ * Strapi big banner structure.
+ *
+ * @internal
+ */
+export type StrapiBigBanner = {
+  /**
+   * The banner component.
+   */
+  __component: "page.big-banner";
+  /**
+   * The board slogan displayed on the banner.
+   */
+  boardSlogan: string;
+  /**
+   * Background image.
+   */
+  img?: {
+    /**
+     * Image URL.
+     */
+    url: string;
+    /**
+     * Optional alternative text for the image.
+     */
+    alternativeText: string | null;
+    /**
+     * Image width in pixels.
+     */
+    width: number;
+    /**
+     * Image height in pixels.
+     */
+    height: number;
+  };
+};
+
+/**
+ * Union of all possible home page sections.
+ */
+export type StrapiHomepageSection =
+  | StrapiSection
+  | StrapiSmallBanner
+  | StrapiBigBanner;
+
+/**
+ * Structure of Strapi home page.
+ */
+export type StrapiHomepage = {
+  /**
+   * Ordered list of home page sections.
+   */
+  pageSections: StrapiHomepageSection[];
+};
+
+/**
  * Generic fetch wrapper for Strapi API requests.
  *
  * @internal
@@ -242,4 +297,53 @@ export async function getPage(slug: string): Promise<StrapiPage | null> {
     metaDescription: item.metaDescription,
     pageSections,
   };
+}
+
+/**
+ * Fetches the homepage from Strapi and maps its sections into typed structures.
+ *
+ * @returns Typed homepage data, or null when no homepage is found.
+ */
+export async function getHomepage(): Promise<StrapiHomepage | null> {
+  const res = await fetchAPI(`homepage?populate[pageSections][populate]=*`);
+
+  const item = res?.data;
+  if (!item) return null;
+
+  const pageSections = (item.pageSections ?? []).map(
+    (section: StrapiHomepageSection) => {
+      if (section.__component === "page.section") {
+        return {
+          ...section,
+          content: Array.isArray((section as StrapiSection).content)
+            ? (section as StrapiSection).content
+            : [],
+        };
+      }
+      if (section.__component === "page.banner") {
+        const banner = section as StrapiSmallBanner;
+        return {
+          ...banner,
+          backgroundImage: banner.backgroundImage
+            ? {
+                ...banner.backgroundImage,
+                url: `${API_URL}${banner.backgroundImage.url}`,
+              }
+            : undefined,
+        };
+      }
+      if (section.__component === "page.big-banner") {
+        const banner = section as StrapiBigBanner;
+        return {
+          ...banner,
+          img: banner.img
+            ? { ...banner.img, url: `${API_URL}${banner.img.url}` }
+            : undefined,
+        };
+      }
+      return section;
+    },
+  );
+
+  return { pageSections };
 }
