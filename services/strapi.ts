@@ -188,6 +188,10 @@ export async function fetchAPI(endpoint: string, options: RequestInit = {}) {
     ...options,
     headers: {
       "Content-Type": "application/json",
+      ...(process.env.STRAPI_API_TOKEN && {
+        Authorization: `Bearer ${process.env.STRAPI_API_TOKEN}`,
+      }),
+      ...options.headers,
     },
   });
 
