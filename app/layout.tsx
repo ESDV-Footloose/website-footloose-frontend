@@ -21,6 +21,13 @@ export type RootLayoutProps = {
 };
 
 /**
+ * A component can be rebuild once every 5 seconds max.
+ * A component is rebuilt when a request is made to it and the cache has expired.
+ * When a component is rebuilt, the cached component (if it exists) is first served, then replaced with the rebuild.
+ */
+export const revalidate = 5;
+
+/**
  * The root layout for the application.
  *
  * @param rootLayoutProps Properties passed to the root layout.
