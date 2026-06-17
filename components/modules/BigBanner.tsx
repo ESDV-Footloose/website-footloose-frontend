@@ -40,10 +40,10 @@ export default function BigBanner({
         className="object-cover object-top relative z-0"
         src={img}
         alt={imgAlt}
-        placeholder="blur"
         sizes="100vw"
         fill
         priority
+        unoptimized
       />
 
       {/* Grey image overlay */}
@@ -52,7 +52,6 @@ export default function BigBanner({
       {/* Text and button */}
       <div className="z-20 absolute top-[80%] left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white text-center">
         <p className="text-2xl md:text-3xl lg:text-4xl">{boardSlogan}</p>
-
         <div className="grid place-content-center py-4 my-2">
           <Link
             href="#"
@@ -65,7 +64,6 @@ export default function BigBanner({
             <span>Become a member here!</span>
           </Link>
         </div>
-
         <div className="flex items-center justify-center ml-2">
           <Link href="#about">
             <FiChevronDown className="text-2xl md:text-3xl lg:text-4xl hover:scale-125 transition-transform mt-8" />
