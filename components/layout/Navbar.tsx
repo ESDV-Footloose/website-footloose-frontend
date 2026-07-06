@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   FiMenu,
   FiArrowRight,
@@ -162,18 +163,30 @@ export type MobileMenuLinkProps = {
 };
 
 /**
+ * Routes where the navbar is always solid, regardless of scroll position.
+ *
+ * @internal
+ */
+const ALWAYS_SOLID_ROUTES = ["/login", "/register"];
+
+/**
  * Main site navigation bar with desktop and mobile navigation.
  *
  * @param links Navigation structure used to build all menu items and dropdowns.
  * @returns The navbar component.
  */
 export const Navbar = ({ links }: { links: NavItem[] }) => {
-  const [scrolled, setScrolled] = useState(false);
+  const pathname = usePathname();
+  const forceSolid = ALWAYS_SOLID_ROUTES.includes(pathname);
+
+  const [scrolledPastThreshold, setScrolled] = useState(false);
   const { scrollY } = useScroll();
 
   useMotionValueEvent(scrollY, "change", (latest) => {
     setScrolled(latest > 250);
   });
+
+  const scrolled = forceSolid ? true : scrolledPastThreshold;
 
   return (
     <nav
