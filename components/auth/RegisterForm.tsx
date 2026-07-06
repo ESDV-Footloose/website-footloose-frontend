@@ -7,10 +7,21 @@ import { signIn, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { FiCheckCircle, FiLogOut, FiUserPlus } from "react-icons/fi";
+import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 
 import Button from "@/components/modules/Button";
 import Container from "@/components/containers/Container";
-import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
+
+/**
+ * Available student status values.
+ */
+type StudentStatus =
+  | ""
+  | "tu-e"
+  | "fontys-eindhoven"
+  | "design-academy-eindhoven"
+  | "other-student"
+  | "not-a-student";
 
 /**
  * Properties passed to the register form component.
@@ -80,16 +91,25 @@ export default function RegisterForm({ session }: RegisterFormProps) {
   const [password, setPassword] = useState("");
   const [passwordRepeat, setPasswordRepeat] = useState("");
 
-  const [dummyDanceExperience, setDummyDanceExperience] = useState("");
-  const [dummyStudentNumber, setDummyStudentNumber] = useState("");
-  const [dummyPhone, setDummyPhone] = useState("");
-  const [dummyAddress, setDummyAddress] = useState("");
-  const [dummyEmergencyContact, setDummyEmergencyContact] = useState("");
-  const [dummyNotes, setDummyNotes] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState("");
+  const [phoneCountryCode, setPhoneCountryCode] = useState("+31");
+  const [phoneNumber, setPhoneNumber] = useState("");
+
+  const [studentStatus, setStudentStatus] = useState<StudentStatus>("");
+  const [otherInstitution, setOtherInstitution] = useState("");
+
+  const [graduationYear, setGraduationYear] = useState("");
+  const [motivation, setMotivation] = useState("");
 
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
+
+  const isStudent =
+    studentStatus === "tu-e" ||
+    studentStatus === "fontys-eindhoven" ||
+    studentStatus === "design-academy-eindhoven" ||
+    studentStatus === "other-student";
 
   /**
    * Validates the first step of the registration form.
@@ -126,12 +146,115 @@ export default function RegisterForm({ session }: RegisterFormProps) {
   }
 
   /**
+   * Validates the second step of the registration form.
+   *
+   * @returns Whether the second step is valid.
+   */
+  function validatePersonalDetailsStep() {
+    if (!dateOfBirth) {
+      setError("Please enter your date of birth.");
+      return false;
+    }
+
+    if (!phoneCountryCode.trim()) {
+      setError("Please enter your country code.");
+      return false;
+    }
+
+    if (!phoneNumber.trim()) {
+      setError("Please enter your phone number.");
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Validates the third step of the registration form.
+   *
+   * @returns Whether the third step is valid.
+   */
+  function validateStudentStatusStep() {
+    if (!studentStatus) {
+      setError("Please select which situation applies to you.");
+      return false;
+    }
+
+    if (studentStatus === "other-student" && !otherInstitution.trim()) {
+      setError("Please enter the institution you study at.");
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Validates the fourth step of the registration form.
+   *
+   * @returns Whether the fourth step is valid.
+   */
+  function validateFinalStep() {
+    if (isStudent) {
+      return true;
+    }
+
+    if (!graduationYear.trim()) {
+      setError("Please enter your graduation year.");
+      return false;
+    }
+
+    if (!motivation.trim()) {
+      setError("Please enter your motivation to become a member of Footloose.");
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Validates all registration steps.
+   *
+   * @returns Whether all registration steps are valid.
+   */
+  function validateAllSteps() {
+    if (!validateAccountStep()) {
+      setCurrentStep(1);
+      return false;
+    }
+
+    if (!validatePersonalDetailsStep()) {
+      setCurrentStep(2);
+      return false;
+    }
+
+    if (!validateStudentStatusStep()) {
+      setCurrentStep(3);
+      return false;
+    }
+
+    if (!validateFinalStep()) {
+      setCurrentStep(4);
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
    * Moves to the next registration step.
    */
   function handleNextStep() {
     setError("");
 
     if (currentStep === 1 && !validateAccountStep()) {
+      return;
+    }
+
+    if (currentStep === 2 && !validatePersonalDetailsStep()) {
+      return;
+    }
+
+    if (currentStep === 3 && !validateStudentStatusStep()) {
       return;
     }
 
@@ -152,8 +275,7 @@ export default function RegisterForm({ session }: RegisterFormProps) {
   async function handleCreateAccount() {
     setError("");
 
-    if (!validateAccountStep()) {
-      setCurrentStep(1);
+    if (!validateAllSteps()) {
       return;
     }
 
@@ -170,6 +292,14 @@ export default function RegisterForm({ session }: RegisterFormProps) {
         username,
         email,
         password,
+        firstName,
+        lastName,
+        dateOfBirth,
+        phoneNumber: `${phoneCountryCode.trim()} ${phoneNumber.trim()}`,
+        studentStatus,
+        otherInstitution,
+        graduationYear,
+        motivation,
       }),
     });
 
@@ -279,6 +409,13 @@ export default function RegisterForm({ session }: RegisterFormProps) {
           >
             {currentStep === 1 && (
               <div className="grid gap-4">
+                <div>
+                  <h2 className="text-lg font-bold">Account details</h2>
+                  <p className="mt-1 text-sm text-neutral-600">
+                    Start with your basic login details.
+                  </p>
+                </div>
+
                 <div className="grid gap-4 md:grid-cols-2">
                   <label className="flex flex-col gap-2">
                     <span className="text-sm font-semibold">First name</span>
@@ -346,108 +483,190 @@ export default function RegisterForm({ session }: RegisterFormProps) {
             {currentStep === 2 && (
               <div className="grid gap-4">
                 <div>
-                  <h2 className="text-lg font-bold">Dance details</h2>
+                  <h2 className="text-lg font-bold">Personal details</h2>
                   <p className="mt-1 text-sm text-neutral-600">
-                    Dummy fields for now. These are not submitted yet.
+                    We need these details for your membership registration.
                   </p>
                 </div>
 
                 <label className="flex flex-col gap-2">
-                  <span className="text-sm font-semibold">
-                    Dance experience
-                  </span>
+                  <span className="text-sm font-semibold">Date of birth</span>
                   <input
-                    value={dummyDanceExperience}
-                    onChange={(event) =>
-                      setDummyDanceExperience(event.target.value)
-                    }
-                    type="text"
+                    value={dateOfBirth}
+                    onChange={(event) => setDateOfBirth(event.target.value)}
+                    type="date"
+                    autoComplete="bday"
                     className="rounded-md border border-black/20 bg-white px-4 py-3 outline-none transition-colors focus:border-footloose"
-                    placeholder="Beginner, intermediate, advanced..."
                   />
                 </label>
 
-                <label className="flex flex-col gap-2">
-                  <span className="text-sm font-semibold">Student number</span>
-                  <input
-                    value={dummyStudentNumber}
-                    onChange={(event) =>
-                      setDummyStudentNumber(event.target.value)
-                    }
-                    type="text"
-                    className="rounded-md border border-black/20 bg-white px-4 py-3 outline-none transition-colors focus:border-footloose"
-                    placeholder="1234567"
-                  />
-                </label>
+                <div className="grid gap-4 md:grid-cols-[120px_1fr]">
+                  <label className="flex flex-col gap-2">
+                    <span className="text-sm font-semibold">Country code</span>
+                    <input
+                      value={phoneCountryCode}
+                      onChange={(event) =>
+                        setPhoneCountryCode(event.target.value)
+                      }
+                      type="text"
+                      autoComplete="tel-country-code"
+                      className="rounded-md border border-black/20 bg-white px-4 py-3 outline-none transition-colors focus:border-footloose"
+                      placeholder="+31"
+                    />
+                  </label>
+
+                  <label className="flex flex-col gap-2">
+                    <span className="text-sm font-semibold">Phone number</span>
+                    <input
+                      value={phoneNumber}
+                      onChange={(event) => setPhoneNumber(event.target.value)}
+                      type="tel"
+                      autoComplete="tel-national"
+                      className="rounded-md border border-black/20 bg-white px-4 py-3 outline-none transition-colors focus:border-footloose"
+                      placeholder="6 12345678"
+                    />
+                  </label>
+                </div>
               </div>
             )}
 
             {currentStep === 3 && (
               <div className="grid gap-4">
                 <div>
-                  <h2 className="text-lg font-bold">Contact details</h2>
+                  <h2 className="text-lg font-bold">Student status</h2>
                   <p className="mt-1 text-sm text-neutral-600">
-                    Dummy fields for now. These are not submitted yet.
+                    Tell us which situation applies to you.
                   </p>
                 </div>
 
                 <label className="flex flex-col gap-2">
-                  <span className="text-sm font-semibold">Phone number</span>
-                  <input
-                    value={dummyPhone}
-                    onChange={(event) => setDummyPhone(event.target.value)}
-                    type="text"
+                  <span className="text-sm font-semibold">I am a...</span>
+                  <select
+                    value={studentStatus}
+                    onChange={(event) => {
+                      const value = event.target.value as StudentStatus;
+                      setStudentStatus(value);
+
+                      if (value !== "other-student") {
+                        setOtherInstitution("");
+                      }
+
+                      if (value !== "not-a-student") {
+                        setGraduationYear("");
+                        setMotivation("");
+                      }
+                    }}
                     className="rounded-md border border-black/20 bg-white px-4 py-3 outline-none transition-colors focus:border-footloose"
-                    placeholder="+31 6 12345678"
-                  />
+                  >
+                    <option value="">Select an option</option>
+                    <option value="tu-e">TU/e Student</option>
+                    <option value="fontys-eindhoven">
+                      Fontys Eindhoven Student
+                    </option>
+                    <option value="design-academy-eindhoven">
+                      Design Academy Eindhoven Student
+                    </option>
+                    <option value="other-student">Other Student</option>
+                    <option value="not-a-student">Not a Student</option>
+                  </select>
                 </label>
 
-                <label className="flex flex-col gap-2">
-                  <span className="text-sm font-semibold">Address</span>
-                  <input
-                    value={dummyAddress}
-                    onChange={(event) => setDummyAddress(event.target.value)}
-                    type="text"
-                    className="rounded-md border border-black/20 bg-white px-4 py-3 outline-none transition-colors focus:border-footloose"
-                    placeholder="Street, city"
-                  />
-                </label>
+                {studentStatus === "other-student" && (
+                  <motion.label
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.2, ease: "easeOut" }}
+                    className="flex flex-col gap-2"
+                  >
+                    <span className="text-sm font-semibold">
+                      Which institution do you study at?
+                    </span>
+                    <input
+                      value={otherInstitution}
+                      onChange={(event) =>
+                        setOtherInstitution(event.target.value)
+                      }
+                      type="text"
+                      className="rounded-md border border-black/20 bg-white px-4 py-3 outline-none transition-colors focus:border-footloose"
+                      placeholder="Your institution"
+                    />
+                  </motion.label>
+                )}
               </div>
             )}
 
             {currentStep === 4 && (
               <div className="grid gap-4">
-                <div>
-                  <h2 className="text-lg font-bold">Final details</h2>
-                  <p className="mt-1 text-sm text-neutral-600">
-                    Dummy fields for now. Click create account when ready.
-                  </p>
-                </div>
+                {isStudent ? (
+                  <>
+                    <div>
+                      <h2 className="text-lg font-bold">Ready to register</h2>
+                      <p className="mt-1 text-sm text-neutral-600">
+                        You are registering as a student member. No additional
+                        details are needed.
+                      </p>
+                    </div>
 
-                <label className="flex flex-col gap-2">
-                  <span className="text-sm font-semibold">
-                    Emergency contact
-                  </span>
-                  <input
-                    value={dummyEmergencyContact}
-                    onChange={(event) =>
-                      setDummyEmergencyContact(event.target.value)
-                    }
-                    type="text"
-                    className="rounded-md border border-black/20 bg-white px-4 py-3 outline-none transition-colors focus:border-footloose"
-                    placeholder="Name and phone number"
-                  />
-                </label>
+                    <div className="rounded-md border border-footloose/20 bg-footloose/5 px-4 py-3 text-sm text-neutral-700">
+                      <p className="font-semibold text-footloose">
+                        Active membership
+                      </p>
+                      <p className="mt-1">
+                        Would you like to help us improve Footloose? You can
+                        become an{" "}
+                        <Link
+                          href="/active-member"
+                          className="underline text-footloose"
+                        >
+                          active member
+                        </Link>{" "}
+                        and help us organize events, workshops and more. Active
+                        membership grants you priority access to our dance
+                        classes.
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      <h2 className="text-lg font-bold">
+                        Non-student application
+                      </h2>
+                      <p className="mt-1 text-sm text-neutral-600">
+                        Since you are not currently a student, we need a little
+                        extra information.
+                      </p>
+                    </div>
 
-                <label className="flex flex-col gap-2">
-                  <span className="text-sm font-semibold">Notes</span>
-                  <textarea
-                    value={dummyNotes}
-                    onChange={(event) => setDummyNotes(event.target.value)}
-                    className="min-h-28 rounded-md border border-black/20 bg-white px-4 py-3 outline-none transition-colors focus:border-footloose"
-                    placeholder="Anything else we should know?"
-                  />
-                </label>
+                    <label className="flex flex-col gap-2">
+                      <span className="text-sm font-semibold">
+                        Graduation year
+                      </span>
+                      <input
+                        value={graduationYear}
+                        onChange={(event) =>
+                          setGraduationYear(event.target.value)
+                        }
+                        type="number"
+                        inputMode="numeric"
+                        className="rounded-md border border-black/20 bg-white px-4 py-3 outline-none transition-colors focus:border-footloose"
+                        placeholder="2024"
+                      />
+                    </label>
+
+                    <label className="flex flex-col gap-2">
+                      <span className="text-sm font-semibold">
+                        Motivation to become a member of Footloose
+                      </span>
+                      <textarea
+                        value={motivation}
+                        onChange={(event) => setMotivation(event.target.value)}
+                        className="min-h-32 rounded-md border border-black/20 bg-white px-4 py-3 outline-none transition-colors focus:border-footloose"
+                        placeholder="Tell us why you would like to become a member."
+                      />
+                    </label>
+                  </>
+                )}
               </div>
             )}
           </motion.div>
@@ -464,7 +683,7 @@ export default function RegisterForm({ session }: RegisterFormProps) {
             type="button"
             onClick={handlePreviousStep}
             disabled={currentStep === 1 || isSubmitting}
-            className="flex items-center gap-1 rounded-md text-neutral-700 transition-colors hover:bg-neutral-100 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40 text-sm"
+            className="flex cursor-pointer items-center gap-1 rounded-md text-sm text-neutral-700 transition-colors hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-40"
           >
             <FaArrowLeft size={12} />
             Previous
@@ -475,7 +694,7 @@ export default function RegisterForm({ session }: RegisterFormProps) {
               type="button"
               onClick={handleNextStep}
               disabled={isSubmitting}
-              className="justify-center items-center"
+              className="items-center justify-center"
             >
               Next
               <FaArrowRight size={12} />
