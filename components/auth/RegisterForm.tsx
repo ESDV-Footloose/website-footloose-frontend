@@ -100,6 +100,7 @@ export default function RegisterForm({ session }: RegisterFormProps) {
 
   const [graduationYear, setGraduationYear] = useState("");
   const [motivation, setMotivation] = useState("");
+  const [privacyPolicyAccepted, setPrivacyPolicyAccepted] = useState(false);
 
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -194,17 +195,22 @@ export default function RegisterForm({ session }: RegisterFormProps) {
    * @returns Whether the fourth step is valid.
    */
   function validateFinalStep() {
-    if (isStudent) {
-      return true;
+    if (!isStudent) {
+      if (!graduationYear.trim()) {
+        setError("Please enter your graduation year.");
+        return false;
+      }
+
+      if (!motivation.trim()) {
+        setError(
+          "Please enter your motivation to become a member of Footloose.",
+        );
+        return false;
+      }
     }
 
-    if (!graduationYear.trim()) {
-      setError("Please enter your graduation year.");
-      return false;
-    }
-
-    if (!motivation.trim()) {
-      setError("Please enter your motivation to become a member of Footloose.");
+    if (!privacyPolicyAccepted) {
+      setError("Please agree with the privacy policy.");
       return false;
     }
 
@@ -300,6 +306,7 @@ export default function RegisterForm({ session }: RegisterFormProps) {
         otherInstitution,
         graduationYear,
         motivation,
+        privacyPolicyAccepted,
       }),
     });
 
@@ -616,7 +623,7 @@ export default function RegisterForm({ session }: RegisterFormProps) {
                         become an{" "}
                         <Link
                           href="/active-member"
-                          className="underline text-footloose"
+                          className="text-footloose underline"
                         >
                           active member
                         </Link>{" "}
@@ -667,6 +674,28 @@ export default function RegisterForm({ session }: RegisterFormProps) {
                     </label>
                   </>
                 )}
+
+                <label className="flex cursor-pointer items-center gap-3 rounded-md border border-black/10 bg-neutral-50 px-4 py-3 text-sm text-neutral-700">
+                  <input
+                    checked={privacyPolicyAccepted}
+                    onChange={(event) =>
+                      setPrivacyPolicyAccepted(event.target.checked)
+                    }
+                    type="checkbox"
+                    className="h-4 w-4 accent-footloose"
+                  />
+
+                  <span>
+                    I agree with the{" "}
+                    <Link
+                      href="/privacy-policy"
+                      className="font-semibold text-footloose hover:underline"
+                    >
+                      privacy policy
+                    </Link>
+                    .
+                  </span>
+                </label>
               </div>
             )}
           </motion.div>
