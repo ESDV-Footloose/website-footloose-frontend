@@ -20,11 +20,5 @@ export const metadata: Metadata = {
 export default async function RegisterPage() {
   const session = await getServerSession(authOptions);
 
-  return (
-    <main className="flex min-h-screen items-center justify-center bg-neutral-100 px-4 pt-24">
-      <section className="w-full max-w-md rounded-2xl bg-white p-8 text-black shadow-xl">
-        <RegisterForm session={session} />
-      </section>
-    </main>
-  );
+  return <RegisterForm session={session} />;
 }

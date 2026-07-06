@@ -5,9 +5,12 @@ import React, { useState } from "react";
 import type { Session } from "next-auth";
 import { signIn, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { AnimatePresence, motion } from "framer-motion";
 import { FiCheckCircle, FiLogOut, FiUserPlus } from "react-icons/fi";
 
 import Button from "@/components/modules/Button";
+import Container from "@/components/containers/Container";
+import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 
 /**
  * Properties passed to the register form component.
@@ -20,6 +23,47 @@ export type RegisterFormProps = {
 };
 
 /**
+ * Properties passed to the steps component.
+ *
+ * @internal
+ */
+export type StepsProps = {
+  /**
+   * Total number of steps.
+   */
+  readonly numSteps: number;
+
+  /**
+   * Current active step.
+   */
+  readonly currentStep: number;
+};
+
+/**
+ * Properties passed to a single step indicator.
+ *
+ * @internal
+ */
+export type StepProps = {
+  /**
+   * Step number.
+   */
+  readonly num: number;
+
+  /**
+   * Whether this step has already been completed.
+   */
+  readonly isComplete: boolean;
+
+  /**
+   * Whether this step is currently active.
+   */
+  readonly isActive: boolean;
+};
+
+const numSteps = 4;
+
+/**
  * Register form for new Strapi users.
  *
  * @param registerFormProps Properties passed to the register form component.
@@ -28,25 +72,94 @@ export type RegisterFormProps = {
 export default function RegisterForm({ session }: RegisterFormProps) {
   const router = useRouter();
 
-  const [username, setUsername] = useState("");
+  const [currentStep, setCurrentStep] = useState(1);
+
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordRepeat, setPasswordRepeat] = useState("");
+
+  const [dummyDanceExperience, setDummyDanceExperience] = useState("");
+  const [dummyStudentNumber, setDummyStudentNumber] = useState("");
+  const [dummyPhone, setDummyPhone] = useState("");
+  const [dummyAddress, setDummyAddress] = useState("");
+  const [dummyEmergencyContact, setDummyEmergencyContact] = useState("");
+  const [dummyNotes, setDummyNotes] = useState("");
+
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  /**
+   * Validates the first step of the registration form.
+   *
+   * @returns Whether the first step is valid.
+   */
+  function validateAccountStep() {
+    if (!firstName.trim()) {
+      setError("Please enter your first name.");
+      return false;
+    }
 
-    setError("");
+    if (!lastName.trim()) {
+      setError("Please enter your last name.");
+      return false;
+    }
+
+    if (!email.trim()) {
+      setError("Please enter your email address.");
+      return false;
+    }
+
+    if (!password) {
+      setError("Please enter a password.");
+      return false;
+    }
 
     if (password !== passwordRepeat) {
       setError("The passwords do not match.");
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Moves to the next registration step.
+   */
+  function handleNextStep() {
+    setError("");
+
+    if (currentStep === 1 && !validateAccountStep()) {
+      return;
+    }
+
+    setCurrentStep((previousStep) => Math.min(previousStep + 1, numSteps));
+  }
+
+  /**
+   * Moves to the previous registration step.
+   */
+  function handlePreviousStep() {
+    setError("");
+    setCurrentStep((previousStep) => Math.max(previousStep - 1, 1));
+  }
+
+  /**
+   * Creates the account after the final registration step.
+   */
+  async function handleCreateAccount() {
+    setError("");
+
+    if (!validateAccountStep()) {
+      setCurrentStep(1);
       return;
     }
 
     setIsSubmitting(true);
+
+    const username = `${firstName.trim()} ${lastName.trim()}`.trim();
 
     const response = await fetch("/api/register", {
       method: "POST",
@@ -88,6 +201,9 @@ export default function RegisterForm({ session }: RegisterFormProps) {
     router.refresh();
   }
 
+  /**
+   * Signs out the current user.
+   */
   async function handleSignOut() {
     setIsSigningOut(true);
 
@@ -101,121 +217,385 @@ export default function RegisterForm({ session }: RegisterFormProps) {
 
   if (session) {
     return (
-      <div className="flex flex-col gap-6">
-        <div className="text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-green-100 text-green-700">
-            <FiCheckCircle size={28} />
+      <Container className="flex justify-center">
+        <div className="flex w-full max-w-2xl flex-col gap-6">
+          <div className="text-center">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-green-100 text-green-700">
+              <FiCheckCircle size={28} />
+            </div>
+
+            <h1 className="text-3xl font-bold">You are logged in</h1>
+
+            <p className="mt-2 text-sm text-neutral-600">
+              You already have an active Footloose membership session.
+            </p>
           </div>
 
-          <h1 className="text-3xl font-bold">You are logged in</h1>
+          <div className="rounded-md border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+            <p className="font-semibold">Logged in successfully</p>
+            {session.user?.email && (
+              <p className="mt-1">{session.user.email}</p>
+            )}
+          </div>
 
-          <p className="mt-2 text-sm text-neutral-600">
-            You already have an active Footloose membership session.
-          </p>
+          <Button
+            onClick={handleSignOut}
+            disabled={isSigningOut}
+            className="justify-center"
+          >
+            <FiLogOut />
+            <span>{isSigningOut ? "Signing out..." : "Sign out"}</span>
+          </Button>
         </div>
-
-        <div className="rounded-md border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
-          <p className="font-semibold">Logged in successfully</p>
-          {session.user?.email && <p className="mt-1">{session.user.email}</p>}
-        </div>
-
-        <Button
-          onClick={handleSignOut}
-          disabled={isSigningOut}
-          className="justify-center"
-        >
-          <FiLogOut />
-          <span>{isSigningOut ? "Signing out..." : "Sign out"}</span>
-        </Button>
-      </div>
+      </Container>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-      <div className="text-center">
-        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-footloose/10 text-footloose">
-          <FiUserPlus size={28} />
+    <Container innerClassName="bg-neutral-100" className="flex justify-center">
+      <div className="flex w-full max-w-2xl flex-col gap-6">
+        <div className="text-center">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-footloose/10 text-footloose">
+            <FiUserPlus size={28} />
+          </div>
+
+          <h1 className="text-3xl font-bold">Create account</h1>
+
+          <p className="mt-2 text-sm text-neutral-600">
+            Register with your email address to create your Footloose account.
+          </p>
         </div>
 
-        <h1 className="text-3xl font-bold">Create account</h1>
+        <Steps numSteps={numSteps} currentStep={currentStep} />
 
-        <p className="mt-2 text-sm text-neutral-600">
-          Register with your email address to create your Footloose account.
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentStep}
+            initial={{ opacity: 0, x: 16 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -16 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className="min-h-84 rounded-2xl bg-white p-8 shadow-xl"
+          >
+            {currentStep === 1 && (
+              <div className="grid gap-4">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <label className="flex flex-col gap-2">
+                    <span className="text-sm font-semibold">First name</span>
+                    <input
+                      value={firstName}
+                      onChange={(event) => setFirstName(event.target.value)}
+                      type="text"
+                      autoComplete="given-name"
+                      className="rounded-md border border-black/20 bg-white px-4 py-3 outline-none transition-colors focus:border-footloose"
+                      placeholder="First name"
+                    />
+                  </label>
+
+                  <label className="flex flex-col gap-2">
+                    <span className="text-sm font-semibold">Last name</span>
+                    <input
+                      value={lastName}
+                      onChange={(event) => setLastName(event.target.value)}
+                      type="text"
+                      autoComplete="family-name"
+                      className="rounded-md border border-black/20 bg-white px-4 py-3 outline-none transition-colors focus:border-footloose"
+                      placeholder="Last name"
+                    />
+                  </label>
+                </div>
+
+                <label className="flex flex-col gap-2">
+                  <span className="text-sm font-semibold">Email</span>
+                  <input
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    type="email"
+                    autoComplete="email"
+                    className="rounded-md border border-black/20 bg-white px-4 py-3 outline-none transition-colors focus:border-footloose"
+                    placeholder="you@example.com"
+                  />
+                </label>
+
+                <label className="flex flex-col gap-2">
+                  <span className="text-sm font-semibold">Password</span>
+                  <input
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                    type="password"
+                    autoComplete="new-password"
+                    className="rounded-md border border-black/20 bg-white px-4 py-3 outline-none transition-colors focus:border-footloose"
+                    placeholder="••••••••"
+                  />
+                </label>
+
+                <label className="flex flex-col gap-2">
+                  <span className="text-sm font-semibold">Repeat password</span>
+                  <input
+                    value={passwordRepeat}
+                    onChange={(event) => setPasswordRepeat(event.target.value)}
+                    type="password"
+                    autoComplete="new-password"
+                    className="rounded-md border border-black/20 bg-white px-4 py-3 outline-none transition-colors focus:border-footloose"
+                    placeholder="••••••••"
+                  />
+                </label>
+              </div>
+            )}
+
+            {currentStep === 2 && (
+              <div className="grid gap-4">
+                <div>
+                  <h2 className="text-lg font-bold">Dance details</h2>
+                  <p className="mt-1 text-sm text-neutral-600">
+                    Dummy fields for now. These are not submitted yet.
+                  </p>
+                </div>
+
+                <label className="flex flex-col gap-2">
+                  <span className="text-sm font-semibold">
+                    Dance experience
+                  </span>
+                  <input
+                    value={dummyDanceExperience}
+                    onChange={(event) =>
+                      setDummyDanceExperience(event.target.value)
+                    }
+                    type="text"
+                    className="rounded-md border border-black/20 bg-white px-4 py-3 outline-none transition-colors focus:border-footloose"
+                    placeholder="Beginner, intermediate, advanced..."
+                  />
+                </label>
+
+                <label className="flex flex-col gap-2">
+                  <span className="text-sm font-semibold">Student number</span>
+                  <input
+                    value={dummyStudentNumber}
+                    onChange={(event) =>
+                      setDummyStudentNumber(event.target.value)
+                    }
+                    type="text"
+                    className="rounded-md border border-black/20 bg-white px-4 py-3 outline-none transition-colors focus:border-footloose"
+                    placeholder="1234567"
+                  />
+                </label>
+              </div>
+            )}
+
+            {currentStep === 3 && (
+              <div className="grid gap-4">
+                <div>
+                  <h2 className="text-lg font-bold">Contact details</h2>
+                  <p className="mt-1 text-sm text-neutral-600">
+                    Dummy fields for now. These are not submitted yet.
+                  </p>
+                </div>
+
+                <label className="flex flex-col gap-2">
+                  <span className="text-sm font-semibold">Phone number</span>
+                  <input
+                    value={dummyPhone}
+                    onChange={(event) => setDummyPhone(event.target.value)}
+                    type="text"
+                    className="rounded-md border border-black/20 bg-white px-4 py-3 outline-none transition-colors focus:border-footloose"
+                    placeholder="+31 6 12345678"
+                  />
+                </label>
+
+                <label className="flex flex-col gap-2">
+                  <span className="text-sm font-semibold">Address</span>
+                  <input
+                    value={dummyAddress}
+                    onChange={(event) => setDummyAddress(event.target.value)}
+                    type="text"
+                    className="rounded-md border border-black/20 bg-white px-4 py-3 outline-none transition-colors focus:border-footloose"
+                    placeholder="Street, city"
+                  />
+                </label>
+              </div>
+            )}
+
+            {currentStep === 4 && (
+              <div className="grid gap-4">
+                <div>
+                  <h2 className="text-lg font-bold">Final details</h2>
+                  <p className="mt-1 text-sm text-neutral-600">
+                    Dummy fields for now. Click create account when ready.
+                  </p>
+                </div>
+
+                <label className="flex flex-col gap-2">
+                  <span className="text-sm font-semibold">
+                    Emergency contact
+                  </span>
+                  <input
+                    value={dummyEmergencyContact}
+                    onChange={(event) =>
+                      setDummyEmergencyContact(event.target.value)
+                    }
+                    type="text"
+                    className="rounded-md border border-black/20 bg-white px-4 py-3 outline-none transition-colors focus:border-footloose"
+                    placeholder="Name and phone number"
+                  />
+                </label>
+
+                <label className="flex flex-col gap-2">
+                  <span className="text-sm font-semibold">Notes</span>
+                  <textarea
+                    value={dummyNotes}
+                    onChange={(event) => setDummyNotes(event.target.value)}
+                    className="min-h-28 rounded-md border border-black/20 bg-white px-4 py-3 outline-none transition-colors focus:border-footloose"
+                    placeholder="Anything else we should know?"
+                  />
+                </label>
+              </div>
+            )}
+          </motion.div>
+        </AnimatePresence>
+
+        {error && (
+          <p className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
+            {error}
+          </p>
+        )}
+
+        <div className="flex items-center justify-between gap-3">
+          <button
+            type="button"
+            onClick={handlePreviousStep}
+            disabled={currentStep === 1 || isSubmitting}
+            className="flex items-center gap-1 rounded-md text-neutral-700 transition-colors hover:bg-neutral-100 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40 text-sm"
+          >
+            <FaArrowLeft size={12} />
+            Previous
+          </button>
+
+          {currentStep < numSteps ? (
+            <Button
+              type="button"
+              onClick={handleNextStep}
+              disabled={isSubmitting}
+              className="justify-center items-center"
+            >
+              Next
+              <FaArrowRight size={12} />
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              onClick={handleCreateAccount}
+              disabled={isSubmitting}
+              className="justify-center"
+            >
+              {isSubmitting ? "Creating account..." : "Create account"}
+            </Button>
+          )}
+        </div>
+
+        <p className="text-center text-sm text-neutral-600">
+          Already have an account?{" "}
+          <Link
+            href="/login"
+            className="font-semibold text-footloose hover:underline"
+          >
+            Log in
+          </Link>
         </p>
       </div>
+    </Container>
+  );
+}
 
-      <label className="flex flex-col gap-2">
-        <span className="text-sm font-semibold">Username</span>
-        <input
-          value={username}
-          onChange={(event) => setUsername(event.target.value)}
-          type="text"
-          required
-          autoComplete="username"
-          className="rounded-md border border-black/20 px-4 py-3 outline-none transition-colors focus:border-footloose"
-          placeholder="Your name"
-        />
-      </label>
+/**
+ * Registration progress indicator.
+ *
+ * @internal
+ * @param stepsProps Properties passed to the steps component.
+ * @returns The steps component.
+ */
+function Steps({ numSteps, currentStep }: StepsProps) {
+  const stepArray = Array.from({ length: numSteps }, (_, index) => index + 1);
 
-      <label className="flex flex-col gap-2">
-        <span className="text-sm font-semibold">Email</span>
-        <input
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          type="email"
-          required
-          autoComplete="email"
-          className="rounded-md border border-black/20 px-4 py-3 outline-none transition-colors focus:border-footloose"
-          placeholder="you@example.com"
-        />
-      </label>
+  return (
+    <div className="flex items-center justify-between gap-3">
+      {stepArray.map((stepNum) => {
+        const isComplete = stepNum < currentStep;
+        const isActive = stepNum === currentStep;
 
-      <label className="flex flex-col gap-2">
-        <span className="text-sm font-semibold">Password</span>
-        <input
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-          type="password"
-          required
-          autoComplete="new-password"
-          className="rounded-md border border-black/20 px-4 py-3 outline-none transition-colors focus:border-footloose"
-          placeholder="••••••••"
-        />
-      </label>
+        return (
+          <React.Fragment key={stepNum}>
+            <Step num={stepNum} isComplete={isComplete} isActive={isActive} />
 
-      <label className="flex flex-col gap-2">
-        <span className="text-sm font-semibold">Repeat password</span>
-        <input
-          value={passwordRepeat}
-          onChange={(event) => setPasswordRepeat(event.target.value)}
-          type="password"
-          required
-          autoComplete="new-password"
-          className="rounded-md border border-black/20 px-4 py-3 outline-none transition-colors focus:border-footloose"
-          placeholder="••••••••"
-        />
-      </label>
+            {stepNum !== numSteps && (
+              <div className="relative h-1 w-full rounded-full bg-neutral-200">
+                <motion.div
+                  className="absolute bottom-0 left-0 top-0 rounded-full bg-footloose"
+                  animate={{ width: isComplete ? "100%" : 0 }}
+                  transition={{ ease: "easeIn", duration: 0.3 }}
+                />
+              </div>
+            )}
+          </React.Fragment>
+        );
+      })}
+    </div>
+  );
+}
 
-      {error && (
-        <p className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
-          {error}
-        </p>
+/**
+ * Single registration progress step.
+ *
+ * @internal
+ * @param stepProps Properties passed to the step component.
+ * @returns The step component.
+ */
+function Step({ num, isComplete, isActive }: StepProps) {
+  return (
+    <div className="relative">
+      <div
+        className={`relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 text-sm font-semibold transition-colors duration-300 ${
+          isComplete
+            ? "border-footloose bg-footloose text-white"
+            : isActive
+              ? "border-footloose bg-white text-footloose"
+              : "border-neutral-300 bg-white text-neutral-300"
+        }`}
+      >
+        <AnimatePresence mode="wait">
+          {isComplete ? (
+            <motion.svg
+              key="step-check"
+              stroke="currentColor"
+              fill="currentColor"
+              strokeWidth="0"
+              viewBox="0 0 16 16"
+              height="1.5em"
+              width="1.5em"
+              xmlns="http://www.w3.org/2000/svg"
+              initial={{ rotate: 180, opacity: 0 }}
+              animate={{ rotate: 0, opacity: 1 }}
+              exit={{ rotate: -180, opacity: 0 }}
+              transition={{ duration: 0.125 }}
+            >
+              <path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z" />
+            </motion.svg>
+          ) : (
+            <motion.span
+              key="step-number"
+              initial={{ rotate: 180, opacity: 0 }}
+              animate={{ rotate: 0, opacity: 1 }}
+              exit={{ rotate: -180, opacity: 0 }}
+              transition={{ duration: 0.125 }}
+            >
+              {num}
+            </motion.span>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {isActive && (
+        <div className="absolute -inset-1.5 z-0 animate-pulse rounded-full bg-footloose/10" />
       )}
-
-      <Button type="submit" disabled={isSubmitting} className="justify-center">
-        {isSubmitting ? "Creating account..." : "Create account"}
-      </Button>
-
-      <p className="text-center text-sm text-neutral-600">
-        Already have an account?{" "}
-        <Link
-          href="/login"
-          className="font-semibold text-footloose hover:underline"
-        >
-          Log in
-        </Link>
-      </p>
-    </form>
+    </div>
   );
 }
