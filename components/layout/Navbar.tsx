@@ -189,29 +189,32 @@ export const Navbar = ({ links }: { links: NavItem[] }) => {
   const scrolled = forceSolid ? true : scrolledPastThreshold;
 
   return (
-    <nav
-      className={`fixed top-0 z-50 w-full 
+    <>
+      <nav
+        className={`fixed top-0 z-50 w-full 
       transition-all duration-300 ease-out border-b
       ${
         scrolled
           ? "bg-white text-black py-3 shadow-md border-black/20 "
           : "bg-white/0 text-white py-6 shadow-none border-black/0"
       }`}
-    >
-      <Container className="py-0!">
-        <div className="mx-auto flex items-center justify-between">
-          <Link href="/">
-            <Logo className="h-8 w-auto" />
-          </Link>
+      >
+        <Container className="py-0!">
+          <div className="mx-auto flex items-center justify-between">
+            <Link href="/">
+              <Logo className="h-8 w-auto" />
+            </Link>
 
-          <div className="hidden gap-6 lg:flex">
-            <Links links={links} />
-            <CTAs scrolled={scrolled} />
+            <div className="hidden gap-6 lg:flex">
+              <Links links={links} />
+              <CTAs scrolled={scrolled} />
+            </div>
+            <MobileMenu links={links} />
           </div>
-          <MobileMenu links={links} />
-        </div>
-      </Container>
-    </nav>
+        </Container>
+      </nav>
+      {forceSolid && <div className="h-[32]" />}
+    </>
   );
 };
 
