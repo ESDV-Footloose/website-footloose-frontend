@@ -287,15 +287,12 @@ export default function RegisterForm({ session }: RegisterFormProps) {
 
     setIsSubmitting(true);
 
-    const username = `${firstName.trim()} ${lastName.trim()}`.trim();
-
     const response = await fetch("/api/register", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        username,
         email,
         password,
         firstName,
