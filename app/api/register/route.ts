@@ -10,6 +10,19 @@ if (!STRAPI_API_URL) {
 }
 
 /**
+ * Maps the form's student-status values to the Strapi enum labels.
+ *
+ * @internal
+ */
+const STUDY_INSTITUTION_MAP: Record<string, string> = {
+  "tu-e": "Eindhoven University of Technology",
+  "fontys-eindhoven": "Fontys University of Applied Sciences Eindhoven",
+  "design-academy-eindhoven": "Design Academy Eindhoven",
+  "other-student": "Other institution",
+  "not-a-student": "Not a student",
+};
+
+/**
  * Handles member registration by forwarding the request to Strapi.
  *
  * @param request Incoming registration request.
@@ -19,15 +32,39 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
 
+    const studyInstitutionEnum = STUDY_INSTITUTION_MAP[body.studentStatus];
+
+    if (!studyInstitutionEnum) {
+      return NextResponse.json(
+        { message: "Please select a valid student status." },
+        { status: 400 },
+      );
+    }
+
     const response = await fetch(`${STRAPI_API_URL}/api/auth/local/register`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        username: body.username,
+        username: body.email,
         email: body.email,
         password: body.password,
+        firstName: body.firstName,
+        lastName: body.lastName,
+        phoneNumber: body.phoneNumber,
+        dateOfBirth: body.dateOfBirth,
+        studyInstitutionEnum,
+        studyInstitutionOther:
+          body.studentStatus === "other-student"
+            ? body.otherInstitution
+            : undefined,
+        graduationYear:
+          body.studentStatus === "not-a-student" && body.graduationYear
+            ? Number(body.graduationYear)
+            : undefined,
+        motivationNotStudent:
+          body.studentStatus === "not-a-student" ? body.motivation : undefined,
       }),
     });
 
