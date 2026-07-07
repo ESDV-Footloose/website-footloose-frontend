@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import React, { useState } from "react";
 import type { Session } from "next-auth";
 import { signIn, signOut } from "next-auth/react";
@@ -152,6 +153,16 @@ export default function LoginForm({ session }: LoginFormProps) {
       <Button type="submit" disabled={isSubmitting} className="justify-center">
         {isSubmitting ? "Signing in..." : "Sign in"}
       </Button>
+
+      <p className="text-center text-sm text-neutral-600">
+        Don't have an account?{" "}
+        <Link
+          href="/register"
+          className="font-semibold text-footloose hover:underline"
+        >
+          Register
+        </Link>
+      </p>
     </form>
   );
 }
