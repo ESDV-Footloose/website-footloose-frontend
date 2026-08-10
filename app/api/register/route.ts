@@ -65,7 +65,6 @@ export async function POST(request: Request) {
             : undefined,
         motivationNotStudent:
           body.studentStatus === "not-a-student" ? body.motivation : undefined,
-        approved: false,
       }),
     });
 
