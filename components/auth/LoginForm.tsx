@@ -87,9 +87,6 @@ export default function LoginForm({ session }: LoginFormProps) {
         <div className="rounded-md border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
           <p className="font-semibold">Logged in successfully</p>
           {session.user?.email && <p className="mt-1">{session.user.email}</p>}
-          {strapiUserId && (
-            <p className="mt-1">Strapi user ID: {strapiUserId}</p>
-          )}
         </div>
 
         <Button

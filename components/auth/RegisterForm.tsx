@@ -358,10 +358,14 @@ export default function RegisterForm({ session }: RegisterFormProps) {
               <FiCheckCircle size={28} />
             </div>
 
-            <h1 className="text-3xl font-bold">You are logged in</h1>
+            <h1 className="text-3xl font-bold">
+              Your registration has been submitted
+            </h1>
 
             <p className="mt-2 text-sm text-neutral-600">
-              You already have an active Footloose membership session.
+              Thank you for registering. Your account application has been
+              received and is currently being reviewed. You will be notified
+              once your account has been approved.
             </p>
           </div>
 
