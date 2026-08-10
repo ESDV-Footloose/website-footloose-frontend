@@ -294,10 +294,12 @@ export const NavLink = ({ children, href, menu }: NavLinkProps) => {
  */
 export const CTAs = ({ scrolled = false }: CTAsProps) => {
   return (
-    <Button className={scrolled ? "" : "hover:border-white!"}>
-      <FiUser />
-      <span>My Membership</span>
-    </Button>
+    <Link href="/login">
+      <Button className={scrolled ? "" : "hover:border-white!"}>
+        <FiUser />
+        <span>My Membership</span>
+      </Button>
+    </Link>
   );
 };
 
