@@ -167,7 +167,7 @@ export type MobileMenuLinkProps = {
  *
  * @internal
  */
-const ALWAYS_SOLID_ROUTES = ["/login", "/register"];
+const ALWAYS_SOLID_ROUTES = ["/login", "/register", "/membership"];
 
 /**
  * Main site navigation bar with desktop and mobile navigation.
