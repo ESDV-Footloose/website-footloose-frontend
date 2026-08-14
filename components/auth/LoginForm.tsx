@@ -3,9 +3,9 @@
 import Link from "next/link";
 import React, { useState } from "react";
 import type { Session } from "next-auth";
-import { signIn, signOut } from "next-auth/react";
+import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { FiCheckCircle, FiLogOut, FiUser } from "react-icons/fi";
+import { FiUser } from "react-icons/fi";
 
 import Button from "@/components/modules/Button";
 
@@ -32,7 +32,6 @@ export default function LoginForm({ session }: LoginFormProps) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSigningOut, setIsSigningOut] = useState(false);
 
   const strapiUserId = (session as any)?.id;
 
@@ -56,49 +55,6 @@ export default function LoginForm({ session }: LoginFormProps) {
     }
 
     router.refresh();
-  }
-
-  async function handleSignOut() {
-    setIsSigningOut(true);
-
-    await signOut({
-      redirect: false,
-    });
-
-    setIsSigningOut(false);
-    router.refresh();
-  }
-
-  if (session) {
-    return (
-      <div className="flex flex-col gap-6">
-        <div className="text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-green-100 text-green-700">
-            <FiCheckCircle size={28} />
-          </div>
-
-          <h1 className="text-3xl font-bold">You are logged in</h1>
-
-          <p className="mt-2 text-sm text-neutral-600">
-            Your Footloose membership session is active.
-          </p>
-        </div>
-
-        <div className="rounded-md border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
-          <p className="font-semibold">Logged in successfully</p>
-          {session.user?.email && <p className="mt-1">{session.user.email}</p>}
-        </div>
-
-        <Button
-          onClick={handleSignOut}
-          disabled={isSigningOut}
-          className="justify-center"
-        >
-          <FiLogOut />
-          <span>{isSigningOut ? "Signing out..." : "Sign out"}</span>
-        </Button>
-      </div>
-    );
   }
 
   return (

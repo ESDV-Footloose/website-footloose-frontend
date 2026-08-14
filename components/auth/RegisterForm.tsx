@@ -3,10 +3,10 @@
 import Link from "next/link";
 import React, { useState } from "react";
 import type { Session } from "next-auth";
-import { signIn, signOut } from "next-auth/react";
+import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import { FiCheckCircle, FiLogOut, FiUserPlus } from "react-icons/fi";
+import { FiUserPlus } from "react-icons/fi";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 
 import Button from "@/components/modules/Button";
@@ -104,7 +104,6 @@ export default function RegisterForm({ session }: RegisterFormProps) {
 
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSigningOut, setIsSigningOut] = useState(false);
 
   const isStudent =
     studentStatus === "tu-e" ||
@@ -332,61 +331,7 @@ export default function RegisterForm({ session }: RegisterFormProps) {
       return;
     }
 
-    router.refresh();
-  }
-
-  /**
-   * Signs out the current user.
-   */
-  async function handleSignOut() {
-    setIsSigningOut(true);
-
-    await signOut({
-      redirect: false,
-    });
-
-    setIsSigningOut(false);
-    router.refresh();
-  }
-
-  if (session) {
-    return (
-      <Container className="flex justify-center">
-        <div className="flex w-full max-w-2xl flex-col gap-6">
-          <div className="text-center">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-green-100 text-green-700">
-              <FiCheckCircle size={28} />
-            </div>
-
-            <h1 className="text-3xl font-bold">
-              Your registration has been submitted
-            </h1>
-
-            <p className="mt-2 text-sm text-neutral-600">
-              Thank you for registering. Your account application has been
-              received and is currently being reviewed. You will be notified
-              once your account has been approved.
-            </p>
-          </div>
-
-          <div className="rounded-md border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
-            <p className="font-semibold">Logged in successfully</p>
-            {session.user?.email && (
-              <p className="mt-1">{session.user.email}</p>
-            )}
-          </div>
-
-          <Button
-            onClick={handleSignOut}
-            disabled={isSigningOut}
-            className="justify-center"
-          >
-            <FiLogOut />
-            <span>{isSigningOut ? "Signing out..." : "Sign out"}</span>
-          </Button>
-        </div>
-      </Container>
-    );
+    router.push("/membership");
   }
 
   return (
