@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth/next";
 
 import LoginForm from "@/components/auth/LoginForm";
@@ -19,6 +20,10 @@ export const metadata: Metadata = {
  */
 export default async function LoginPage() {
   const session = await getServerSession(authOptions);
+
+  if (session) {
+    redirect("/membership");
+  }
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-neutral-100 px-4 pt-24">
