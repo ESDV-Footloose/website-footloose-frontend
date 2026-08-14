@@ -93,7 +93,7 @@ export default function RegisterForm({ privacyPolicyUrl }: RegisterFormProps) {
   const [passwordRepeat, setPasswordRepeat] = useState("");
 
   const [dateOfBirth, setDateOfBirth] = useState("");
-  const [phoneCountryCode, setPhoneCountryCode] = useState("+31");
+  const [phoneCountryCode, setPhoneCountryCode] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
 
   const [studentStatus, setStudentStatus] = useState<StudentStatus>("");
