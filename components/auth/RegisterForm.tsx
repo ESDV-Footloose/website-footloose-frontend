@@ -86,6 +86,7 @@ export default function RegisterForm() {
 
   const [studentStatus, setStudentStatus] = useState<StudentStatus>("");
   const [otherInstitution, setOtherInstitution] = useState("");
+  const [studentEmail, setStudentEmail] = useState("");
 
   const [graduationYear, setGraduationYear] = useState("");
   const [motivation, setMotivation] = useState("");
@@ -145,16 +146,6 @@ export default function RegisterForm() {
       return false;
     }
 
-    if (!phoneCountryCode.trim()) {
-      setError("Please enter your country code.");
-      return false;
-    }
-
-    if (!phoneNumber.trim()) {
-      setError("Please enter your phone number.");
-      return false;
-    }
-
     return true;
   }
 
@@ -171,6 +162,11 @@ export default function RegisterForm() {
 
     if (studentStatus === "other-student" && !otherInstitution.trim()) {
       setError("Please enter the institution you study at.");
+      return false;
+    }
+
+    if (isStudent && !studentEmail.trim()) {
+      setError("Please enter your student email address.");
       return false;
     }
 
@@ -288,6 +284,7 @@ export default function RegisterForm() {
         dateOfBirth,
         phoneNumber: `${phoneCountryCode.trim()} ${phoneNumber.trim()}`,
         studentStatus,
+        studentEmail,
         otherInstitution,
         graduationYear,
         motivation,
@@ -458,7 +455,9 @@ export default function RegisterForm() {
                   </label>
 
                   <label className="flex flex-col gap-2">
-                    <span className="text-sm font-semibold">Phone number</span>
+                    <span className="text-sm font-semibold">
+                      Phone number (optional)
+                    </span>
                     <input
                       value={phoneNumber}
                       onChange={(event) => setPhoneNumber(event.target.value)}
@@ -496,6 +495,8 @@ export default function RegisterForm() {
                       if (value !== "not-a-student") {
                         setGraduationYear("");
                         setMotivation("");
+                      } else {
+                        setStudentEmail("");
                       }
                     }}
                     className="rounded-md border border-black/20 bg-white px-4 py-3 outline-none transition-colors focus:border-footloose"
@@ -531,6 +532,25 @@ export default function RegisterForm() {
                       type="text"
                       className="rounded-md border border-black/20 bg-white px-4 py-3 outline-none transition-colors focus:border-footloose"
                       placeholder="Your institution"
+                    />
+                  </motion.label>
+                )}
+
+                {isStudent && (
+                  <motion.label
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.2, ease: "easeOut" }}
+                    className="flex flex-col gap-2"
+                  >
+                    <span className="text-sm font-semibold">Student email</span>
+                    <input
+                      value={studentEmail}
+                      onChange={(event) => setStudentEmail(event.target.value)}
+                      type="email"
+                      autoComplete="email"
+                      className="rounded-md border border-black/20 bg-white px-4 py-3 outline-none transition-colors focus:border-footloose"
+                      placeholder="you@example.com"
                     />
                   </motion.label>
                 )}

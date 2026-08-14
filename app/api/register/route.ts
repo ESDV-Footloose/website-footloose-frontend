@@ -41,6 +41,15 @@ export async function POST(request: Request) {
       );
     }
 
+    const isStudent = body.studentStatus !== "not-a-student";
+
+    if (isStudent && !body.studentEmail) {
+      return NextResponse.json(
+        { message: "Please enter your student email address." },
+        { status: 400 },
+      );
+    }
+
     const response = await fetch(`${STRAPI_API_URL}/api/auth/local/register`, {
       method: "POST",
       headers: {
@@ -59,6 +68,7 @@ export async function POST(request: Request) {
           body.studentStatus === "other-student"
             ? body.otherInstitution
             : undefined,
+        studentEmail: isStudent ? body.studentEmail : undefined,
         graduationYear:
           body.studentStatus === "not-a-student" && body.graduationYear
             ? Number(body.graduationYear)
