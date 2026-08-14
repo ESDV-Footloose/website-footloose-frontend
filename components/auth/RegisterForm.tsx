@@ -61,6 +61,18 @@ export type StepProps = {
   readonly isActive: boolean;
 };
 
+/**
+ * Properties passed to the registration form.
+ *
+ * @internal
+ */
+export type RegisterFormProps = {
+  /**
+   * The URL of the uploaded privacy policy.
+   */
+  readonly privacyPolicyUrl: string | null;
+};
+
 const numSteps = 4;
 
 /**
@@ -69,7 +81,7 @@ const numSteps = 4;
  * @param registerFormProps Properties passed to the register form component.
  * @returns The register form component.
  */
-export default function RegisterForm() {
+export default function RegisterForm({ privacyPolicyUrl }: RegisterFormProps) {
   const router = useRouter();
 
   const [currentStep, setCurrentStep] = useState(1);
@@ -642,12 +654,20 @@ export default function RegisterForm() {
 
                   <span>
                     I agree with the{" "}
-                    <Link
-                      href="/privacy-policy"
-                      className="font-semibold text-footloose hover:underline"
-                    >
-                      privacy policy
-                    </Link>
+                    {privacyPolicyUrl ? (
+                      <a
+                        href={privacyPolicyUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-semibold text-footloose hover:underline"
+                      >
+                        privacy policy
+                      </a>
+                    ) : (
+                      <span className="font-semibold text-neutral-400">
+                        privacy policy
+                      </span>
+                    )}
                     .
                   </span>
                 </label>

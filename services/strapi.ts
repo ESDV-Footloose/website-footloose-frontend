@@ -175,6 +175,15 @@ export type StrapiHomepage = {
 };
 
 /**
+ * Site-wide documents, singleton content type.
+ *
+ * @internal
+ */
+export type StrapiSiteLibrary = {
+  privacyPolicyUrl: string | null;
+};
+
+/**
  * Generic fetch wrapper for Strapi API requests.
  *
  * @internal
@@ -351,4 +360,22 @@ export async function getHomepage(): Promise<StrapiHomepage | null> {
   );
 
   return { pageSections };
+}
+
+/**
+ * Fetches site singleton documents from Strapi.
+ *
+ * @returns Singleton documents, with a null document URL if none is uploaded.
+ */
+export async function getSiteLibrary(): Promise<StrapiSiteLibrary> {
+  const res = await fetchAPI("site-library?populate=privacyPolicyDocument");
+  const privacyPolicyDocument = res?.data?.privacyPolicyDocument;
+
+  return {
+    privacyPolicyUrl: privacyPolicyDocument?.url
+      ? privacyPolicyDocument.url.startsWith("http")
+        ? privacyPolicyDocument.url
+        : `${API_URL}${privacyPolicyDocument.url}`
+      : null,
+  };
 }
