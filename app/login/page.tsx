@@ -28,7 +28,7 @@ export default async function LoginPage() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-neutral-100 px-4 pt-24">
       <section className="w-full max-w-md rounded-2xl bg-white p-8 text-black shadow-xl">
-        <LoginForm session={session} />
+        <LoginForm />
       </section>
     </main>
   );

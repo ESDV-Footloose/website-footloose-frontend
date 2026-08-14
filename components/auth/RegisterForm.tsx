@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import React, { useState } from "react";
-import type { Session } from "next-auth";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
@@ -22,16 +21,6 @@ type StudentStatus =
   | "design-academy-eindhoven"
   | "other-student"
   | "not-a-student";
-
-/**
- * Properties passed to the register form component.
- */
-export type RegisterFormProps = {
-  /**
-   * Current NextAuth session.
-   */
-  readonly session: Session | null;
-};
 
 /**
  * Properties passed to the steps component.
@@ -80,7 +69,7 @@ const numSteps = 4;
  * @param registerFormProps Properties passed to the register form component.
  * @returns The register form component.
  */
-export default function RegisterForm({ session }: RegisterFormProps) {
+export default function RegisterForm() {
   const router = useRouter();
 
   const [currentStep, setCurrentStep] = useState(1);

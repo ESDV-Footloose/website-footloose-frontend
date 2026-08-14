@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import React, { useState } from "react";
-import type { Session } from "next-auth";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { FiUser } from "react-icons/fi";
@@ -10,30 +9,18 @@ import { FiUser } from "react-icons/fi";
 import Button from "@/components/modules/Button";
 
 /**
- * Properties passed to the login form component.
- */
-export type LoginFormProps = {
-  /**
-   * Current NextAuth session.
-   */
-  readonly session: Session | null;
-};
-
-/**
  * Login form for Strapi users.
  *
  * @param loginFormProps Properties passed to the login form component.
  * @returns The login form component.
  */
-export default function LoginForm({ session }: LoginFormProps) {
+export default function LoginForm() {
   const router = useRouter();
 
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const strapiUserId = (session as any)?.id;
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -108,7 +95,7 @@ export default function LoginForm({ session }: LoginFormProps) {
       </Button>
 
       <p className="text-center text-sm text-neutral-600">
-        Don't have an account?{" "}
+        Don&apos;t have an account?{" "}
         <Link
           href="/register"
           className="font-semibold text-footloose hover:underline"

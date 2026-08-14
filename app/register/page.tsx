@@ -25,5 +25,5 @@ export default async function RegisterPage() {
     redirect("/membership");
   }
 
-  return <RegisterForm session={session} />;
+  return <RegisterForm />;
 }
