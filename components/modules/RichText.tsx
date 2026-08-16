@@ -290,7 +290,7 @@ function renderBlock(block: RichTextBlock, key: React.Key) {
             alt={image.alternativeText}
             width={image.width}
             height={image.height}
-            className="max-w-5xl"
+            className="block h-auto w-full max-w-5xl"
             unoptimized
           />
           {image.caption && (
