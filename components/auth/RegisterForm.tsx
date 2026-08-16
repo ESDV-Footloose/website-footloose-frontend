@@ -61,18 +61,6 @@ export type StepProps = {
   readonly isActive: boolean;
 };
 
-/**
- * Properties passed to the registration form.
- *
- * @internal
- */
-export type RegisterFormProps = {
-  /**
-   * The URL of the uploaded privacy policy.
-   */
-  readonly privacyPolicyUrl: string | null;
-};
-
 const numSteps = 4;
 
 /**
@@ -81,7 +69,7 @@ const numSteps = 4;
  * @param registerFormProps Properties passed to the register form component.
  * @returns The register form component.
  */
-export default function RegisterForm({ privacyPolicyUrl }: RegisterFormProps) {
+export default function RegisterForm() {
   const router = useRouter();
 
   const [currentStep, setCurrentStep] = useState(1);
@@ -588,12 +576,14 @@ export default function RegisterForm({ privacyPolicyUrl }: RegisterFormProps) {
                       <p className="mt-1">
                         Would you like to help us improve Footloose? You can
                         become an{" "}
-                        <Link
+                        <a
                           href="/active"
-                          className="text-footloose underline"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-semibold text-footloose hover:underline"
                         >
                           active member
-                        </Link>{" "}
+                        </a>{" "}
                         and help us organize events, workshops and more. Active
                         membership grants you priority access to our dance
                         classes.
@@ -651,23 +641,16 @@ export default function RegisterForm({ privacyPolicyUrl }: RegisterFormProps) {
                     type="checkbox"
                     className="h-4 w-4 accent-footloose"
                   />
-
                   <span>
-                    I agree with the{" "}
-                    {privacyPolicyUrl ? (
-                      <a
-                        href={privacyPolicyUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="font-semibold text-footloose hover:underline"
-                      >
-                        privacy policy
-                      </a>
-                    ) : (
-                      <span className="font-semibold text-neutral-400">
-                        privacy policy
-                      </span>
-                    )}
+                    I agree with{" "}
+                    <a
+                      href="/association-documents"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-semibold text-footloose hover:underline"
+                    >
+                      privacy policy
+                    </a>
                     .
                   </span>
                 </label>

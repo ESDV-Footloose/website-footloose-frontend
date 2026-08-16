@@ -4,7 +4,6 @@ import { getServerSession } from "next-auth/next";
 
 import RegisterForm from "@/components/auth/RegisterForm";
 import { authOptions } from "@/services/auth";
-import { getSiteLibrary } from "@/services/strapi";
 
 /**
  * Metadata for the register page.
@@ -26,7 +25,5 @@ export default async function RegisterPage() {
     redirect("/membership");
   }
 
-  const { privacyPolicyUrl } = await getSiteLibrary();
-
-  return <RegisterForm privacyPolicyUrl={privacyPolicyUrl} />;
+  return <RegisterForm />;
 }
