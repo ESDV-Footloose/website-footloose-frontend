@@ -589,7 +589,7 @@ export default function RegisterForm({ privacyPolicyUrl }: RegisterFormProps) {
                         Would you like to help us improve Footloose? You can
                         become an{" "}
                         <Link
-                          href="/active-member"
+                          href="/active"
                           className="text-footloose underline"
                         >
                           active member

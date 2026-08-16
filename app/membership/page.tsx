@@ -293,7 +293,7 @@ export default async function MembershipPage() {
               <div className="p-6 pt-5 space-y-4">
                 {isActiveMember ? (
                   <Link
-                    href="/active-member"
+                    href="/active"
                     className="group flex items-center justify-between text-sm font-semibold text-footloose"
                   >
                     View active member details
@@ -301,7 +301,7 @@ export default async function MembershipPage() {
                   </Link>
                 ) : (
                   <Link
-                    href="/active-member"
+                    href="/active"
                     className="flex items-center justify-center gap-2 rounded-xl bg-footloose px-4 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90"
                   >
                     Become active
