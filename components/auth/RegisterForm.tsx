@@ -642,7 +642,7 @@ export default function RegisterForm() {
                     className="h-4 w-4 accent-footloose"
                   />
                   <span>
-                    I agree with{" "}
+                    I agree with the{" "}
                     <a
                       href="/association-documents"
                       target="_blank"

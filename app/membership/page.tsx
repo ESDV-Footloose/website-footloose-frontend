@@ -77,7 +77,7 @@ export default async function MembershipPage() {
       <main className="min-h-screen bg-slate-50 px-4 pb-16 pt-28 flex items-center justify-center">
         <div className="w-full max-w-lg">
           <div className="overflow-hidden rounded-3xl bg-white shadow-xl shadow-slate-200/50 border border-slate-100">
-            <div className="h-3 bg-gradient-to-r from-amber-400 to-amber-500" />
+            <div className="h-3 bg-linear-to-r from-amber-400 to-amber-500" />
 
             <div className="p-8 sm:p-10 text-center">
               <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-amber-50 text-amber-600 ring-8 ring-amber-50/50">
