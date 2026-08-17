@@ -54,7 +54,7 @@ export default function BigBanner({
         <p className="text-2xl md:text-3xl lg:text-4xl">{boardSlogan}</p>
         <div className="grid place-content-center py-4 my-2">
           <Link
-            href="#"
+            href="/register"
             passHref
             className="group flex text-sm sm:text-md md:text-lg h-10 items-center gap-2 rounded-full border-2 border-white bg-transparent pl-3 pr-4 transition-all duration-300 ease-in-out hover:bg-black hover:bg-opacity-50 hover:pl-2 hover:text-white active:bg-neutral-700 min-w-53.75"
           >

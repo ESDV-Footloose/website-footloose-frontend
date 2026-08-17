@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   FiMenu,
   FiArrowRight,
@@ -162,43 +163,58 @@ export type MobileMenuLinkProps = {
 };
 
 /**
+ * Routes where the navbar is always solid, regardless of scroll position.
+ *
+ * @internal
+ */
+const ALWAYS_SOLID_ROUTES = ["/login", "/register", "/membership"];
+
+/**
  * Main site navigation bar with desktop and mobile navigation.
  *
  * @param links Navigation structure used to build all menu items and dropdowns.
  * @returns The navbar component.
  */
 export const Navbar = ({ links }: { links: NavItem[] }) => {
-  const [scrolled, setScrolled] = useState(false);
+  const pathname = usePathname();
+  const forceSolid = ALWAYS_SOLID_ROUTES.includes(pathname);
+
+  const [scrolledPastThreshold, setScrolled] = useState(false);
   const { scrollY } = useScroll();
 
   useMotionValueEvent(scrollY, "change", (latest) => {
     setScrolled(latest > 250);
   });
 
+  const scrolled = forceSolid ? true : scrolledPastThreshold;
+
   return (
-    <nav
-      className={`fixed top-0 z-50 w-full 
+    <>
+      <nav
+        className={`fixed top-0 z-50 w-full 
       transition-all duration-300 ease-out border-b
       ${
         scrolled
           ? "bg-white text-black py-3 shadow-md border-black/20 "
           : "bg-white/0 text-white py-6 shadow-none border-black/0"
       }`}
-    >
-      <Container className="py-0!">
-        <div className="mx-auto flex items-center justify-between">
-          <Link href="/">
-            <Logo className="h-8 w-auto" />
-          </Link>
+      >
+        <Container className="py-0!">
+          <div className="mx-auto flex items-center justify-between">
+            <Link href="/">
+              <Logo className="h-8 w-auto" />
+            </Link>
 
-          <div className="hidden gap-6 lg:flex">
-            <Links links={links} />
-            <CTAs scrolled={scrolled} />
+            <div className="hidden gap-6 lg:flex">
+              <Links links={links} />
+              <CTAs scrolled={scrolled} />
+            </div>
+            <MobileMenu links={links} />
           </div>
-          <MobileMenu links={links} />
-        </div>
-      </Container>
-    </nav>
+        </Container>
+      </nav>
+      {forceSolid && <div className="h-[32]" />}
+    </>
   );
 };
 
@@ -278,10 +294,12 @@ export const NavLink = ({ children, href, menu }: NavLinkProps) => {
  */
 export const CTAs = ({ scrolled = false }: CTAsProps) => {
   return (
-    <Button className={scrolled ? "" : "hover:border-white!"}>
-      <FiUser />
-      <span>My Membership</span>
-    </Button>
+    <Link href="/login">
+      <Button className={scrolled ? "" : "hover:border-white!"}>
+        <FiUser />
+        <span>My Membership</span>
+      </Button>
+    </Link>
   );
 };
 
