@@ -38,7 +38,7 @@ export default function Container({
   return (
     <div id={id} className={`flex justify-center w-full ${innerClassName}`}>
       <div
-        className={`w-full max-w-500 px-4 md:px-8 lg:px-16 py-16 ${className}`}
+        className={`w-full max-w-500 px-4 md:px-8 lg:px-16 py-4 ${className}`}
       >
         {children}
       </div>
