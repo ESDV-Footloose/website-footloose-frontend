@@ -209,7 +209,7 @@ export default async function MembershipPage() {
               {isStudent ? (
                 <DetailTile
                   icon={<FiMail />}
-                  label="Student Email"
+                  label="Academic Email"
                   value={user.studentEmail}
                 />
               ) : (

@@ -12,11 +12,12 @@ import Button from "@/components/modules/Button";
 import Container from "@/components/containers/Container";
 
 /**
- * Available student status values.
+ * Available academic status values.
  */
 type StudentStatus =
   | ""
   | "tu-e"
+  | "tu-e-phd-engd"
   | "fontys-eindhoven"
   | "design-academy-eindhoven"
   | "other-student"
@@ -97,6 +98,7 @@ export default function RegisterForm() {
 
   const isStudent =
     studentStatus === "tu-e" ||
+    studentStatus == "tu-e-phd-engd" ||
     studentStatus === "fontys-eindhoven" ||
     studentStatus === "design-academy-eindhoven" ||
     studentStatus === "other-student";
@@ -166,7 +168,7 @@ export default function RegisterForm() {
     }
 
     if (isStudent && !studentEmail.trim()) {
-      setError("Please enter your student email address.");
+      setError("Please enter your academic email address.");
       return false;
     }
 
@@ -474,7 +476,7 @@ export default function RegisterForm() {
             {currentStep === 3 && (
               <div className="grid gap-4">
                 <div>
-                  <h2 className="text-lg font-bold">Student status</h2>
+                  <h2 className="text-lg font-bold">Academic status</h2>
                   <p className="mt-1 text-sm text-neutral-600">
                     Tell us which situation applies to you.
                   </p>
@@ -503,6 +505,7 @@ export default function RegisterForm() {
                   >
                     <option value="">Select an option</option>
                     <option value="tu-e">TU/e Student</option>
+                    <option value="tu-e-phd-engd">TU/e PhD/EngD</option>
                     <option value="fontys-eindhoven">
                       Fontys Eindhoven Student
                     </option>
@@ -543,7 +546,9 @@ export default function RegisterForm() {
                     transition={{ duration: 0.2, ease: "easeOut" }}
                     className="flex flex-col gap-2"
                   >
-                    <span className="text-sm font-semibold">Student email</span>
+                    <span className="text-sm font-semibold">
+                      Academic email
+                    </span>
                     <input
                       value={studentEmail}
                       onChange={(event) => setStudentEmail(event.target.value)}

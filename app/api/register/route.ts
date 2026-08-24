@@ -10,12 +10,13 @@ if (!STRAPI_API_URL) {
 }
 
 /**
- * Maps the form's student-status values to the Strapi enum labels.
+ * Maps the form's academic-status values to the Strapi enum labels.
  *
  * @internal
  */
 const STUDY_INSTITUTION_MAP: Record<string, string> = {
   "tu-e": "Eindhoven University of Technology",
+  "tu-e-phd-engd": "Eindhoven University of Technology PhD/EngD",
   "fontys-eindhoven": "Fontys University of Applied Sciences Eindhoven",
   "design-academy-eindhoven": "Design Academy Eindhoven",
   "other-student": "Other institution",
@@ -36,7 +37,7 @@ export async function POST(request: Request) {
 
     if (!studyInstitutionEnum) {
       return NextResponse.json(
-        { message: "Please select a valid student status." },
+        { message: "Please select a valid academic status." },
         { status: 400 },
       );
     }
@@ -45,7 +46,7 @@ export async function POST(request: Request) {
 
     if (isStudent && !body.studentEmail) {
       return NextResponse.json(
-        { message: "Please enter your student email address." },
+        { message: "Please enter your academic email address." },
         { status: 400 },
       );
     }
