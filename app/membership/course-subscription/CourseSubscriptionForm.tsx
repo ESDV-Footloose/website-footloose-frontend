@@ -7,6 +7,42 @@ import { FiStar, FiCheckCircle, FiInfo } from "react-icons/fi";
 type Course = { documentId: string; style: string; level: string };
 type Subscription = { courseIds: string[]; priorityCourseIds: string[] };
 
+const DEFAULT_LEVEL_ORDER = ["1", "2", "3", "4", "demoteam"];
+const STYLE_LEVEL_ORDER: Record<string, string[]> = {
+  ballroom: ["bronze", "silver", "silverstar", "gold", "topclass"],
+};
+
+/**
+ * Normalizes a level string for comparison: lowercase, strip whitespace.
+ */
+function normalize(value: string) {
+  return value.trim().toLowerCase().replace(/\s+/g, "");
+}
+
+/**
+ * Shortens numeric levels like "One (1)" down to just "1". Levels without
+ * a parenthesized digit (e.g. "Demoteam", "Bronze") pass through unchanged.
+ */
+function getLevelDisplay(level: string): string {
+  const match = level.match(/\((\d+)\)/);
+  return match ? match[1] : level;
+}
+
+/**
+ * Returns the sort index for a course's level within its dance style.
+ * Ballroom uses its own bronze→topclass order; everything else defaults
+ * to numeric 1-4 then demoteam. Unrecognized levels sort last.
+ */
+function levelSortKey(style: string, level: string): number {
+  const order = STYLE_LEVEL_ORDER[normalize(style)] ?? DEFAULT_LEVEL_ORDER;
+  const display = normalize(getLevelDisplay(level));
+  const rawLevel = normalize(level);
+
+  let idx = order.findIndex((o) => o === display || rawLevel.includes(o));
+  if (idx === -1) idx = order.length;
+  return idx;
+}
+
 export default function CourseSubscriptionForm({
   courses,
   isActiveMember,
@@ -37,6 +73,11 @@ export default function CourseSubscriptionForm({
     for (const course of courses) {
       if (!map.has(course.style)) map.set(course.style, []);
       map.get(course.style)!.push(course);
+    }
+    for (const [style, styleCourses] of map) {
+      styleCourses.sort(
+        (a, b) => levelSortKey(style, a.level) - levelSortKey(style, b.level),
+      );
     }
     return map;
   }, [courses]);
@@ -167,7 +208,7 @@ export default function CourseSubscriptionForm({
                     {course.style}
                   </p>
                   <p className="text-sm font-semibold text-slate-800">
-                    {course.level}
+                    {getLevelDisplay(course.level)}
                   </p>
                 </div>
                 {priorities.has(course.documentId) && (
@@ -232,7 +273,7 @@ export default function CourseSubscriptionForm({
                           className="h-5 w-5 rounded border-slate-300 text-footloose focus:ring-footloose"
                         />
                         <span className="text-sm font-semibold text-slate-800">
-                          {course.level}
+                          {style} {getLevelDisplay(course.level)}
                         </span>
                       </span>
                       {isPriority && (
@@ -259,7 +300,7 @@ export default function CourseSubscriptionForm({
                     <option value="">No priority</option>
                     {picked.map((course) => (
                       <option key={course.documentId} value={course.documentId}>
-                        {course.level}
+                        {getLevelDisplay(course.level)}
                       </option>
                     ))}
                   </select>
@@ -307,7 +348,7 @@ export default function CourseSubscriptionForm({
                         {course.style}
                       </p>
                       <p className="text-sm text-slate-500 truncate">
-                        {course.level}
+                        {getLevelDisplay(course.level)}
                       </p>
                     </div>
                     {priorities.has(course.documentId) && (
@@ -359,7 +400,7 @@ export default function CourseSubscriptionForm({
             type="button"
             disabled={!canSubmit}
             onClick={save}
-            className="w-full rounded-xl bg-footloose px-4 py-3.5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="w-full rounded-xl bg-footloose px-4 py-3.5 text-base font-semibold text-white transition-opacity hover:opacity-90 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {submitting ? "Saving..." : "Save subscriptions"}
           </button>
