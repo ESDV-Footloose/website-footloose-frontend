@@ -1,10 +1,29 @@
-import type { NextAuthOptions } from "next-auth";
+import type { NextAuthOptions, DefaultSession } from "next-auth";
+import type { JWT } from "next-auth/jwt";
 import CredentialsProvider from "next-auth/providers/credentials";
 
 const STRAPI_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL?.replace(
   /\/$/,
   "",
 );
+
+interface CustomUser {
+  id: string;
+  name?: string | null;
+  email?: string | null;
+  jwt: string;
+  strapiUserId: number;
+}
+
+interface CustomSession extends DefaultSession {
+  jwt?: string;
+  id?: string;
+}
+
+interface CustomJWT extends Omit<JWT, "id"> {
+  jwt?: string;
+  id?: string;
+}
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -52,7 +71,7 @@ export const authOptions: NextAuthOptions = {
             email: data.user.email,
             jwt: data.jwt,
             strapiUserId: data.user.id,
-          };
+          } as CustomUser;
         } catch (error) {
           console.error("Error during Strapi login:", error);
           return null;
@@ -70,19 +89,19 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        const typedUser = user as any;
-        const typedToken = token as any;
+        const typedUser = user as unknown as CustomUser;
+        const typedToken = token as CustomJWT;
 
         typedToken.jwt = typedUser.jwt;
-        typedToken.id = typedUser.strapiUserId;
+        typedToken.id = typedUser.strapiUserId.toString();
       }
 
-      return token;
+      return token as JWT;
     },
 
     async session({ session, token }) {
-      const typedSession = session as any;
-      const typedToken = token as any;
+      const typedSession = session as CustomSession;
+      const typedToken = token as CustomJWT;
 
       typedSession.jwt = typedToken.jwt;
       typedSession.id = typedToken.id;
