@@ -183,7 +183,6 @@ export default function CourseSubscriptionForm({
     );
   }
 
-  const totalStyles = stylesMap.size;
   const stylesWithSelection = [...stylesMap.keys()].filter(
     (style) => selectedForStyle(style, selected).length > 0,
   ).length;
