@@ -151,7 +151,6 @@ export default async function MembershipPage() {
   const subState = subscriptionRes?.data ?? null;
   const semester = subState?.semester ?? null;
   const subscription = subState?.subscription ?? null;
-  const isSubEditable = subState?.isEditable ?? false;
 
   const registrationDeadline = semester?.registrationDeadline
     ? new Date(semester.registrationDeadline)
@@ -165,52 +164,80 @@ export default async function MembershipPage() {
       )
     : [];
 
+  const quickLinks = [
+    { label: "Personal Details", href: "#personal-details" },
+    { label: "Institution Details", href: "#institution-details" },
+    { label: "Membership Status", href: "#membership-status" },
+    { label: "Course Subscriptions", href: "#course-subscriptions" },
+  ];
+
   return (
-    <main className="min-h-screen bg-slate-50/50 px-4 pb-16 pt-24 sm:pt-28">
+    <main className="min-h-screen bg-slate-50/50 px-4 pb-16 pt-24 sm:pt-28 scroll-smooth">
       <div className="mx-auto max-w-7xl space-y-6">
         {/* Profile Header */}
         <div className="relative overflow-hidden rounded-3xl bg-white p-6 sm:p-8 shadow-xl shadow-slate-200/50 border border-slate-100">
           <div className="absolute top-0 left-0 right-0 h-2 bg-footloose" />
 
-          <div className="flex flex-col sm:flex-row sm:items-center gap-6">
-            <div className="flex items-center gap-5 flex-1 min-w-0">
-              <div className="flex h-16 w-16 sm:h-20 sm:w-20 shrink-0 items-center justify-center rounded-2xl bg-footloose/10 text-2xl sm:text-3xl font-bold text-footloose">
-                {initials}
+          <div className="flex flex-col gap-6">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-6">
+              <div className="flex items-center gap-5 flex-1 min-w-0">
+                <div className="flex h-16 w-16 sm:h-20 sm:w-20 shrink-0 items-center justify-center rounded-2xl bg-footloose/10 text-2xl sm:text-3xl font-bold text-footloose">
+                  {initials}
+                </div>
+
+                <div className="min-w-0">
+                  <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight truncate">
+                    {fullName}
+                  </h1>
+                  <p className="text-sm font-medium text-slate-600 truncate">
+                    {user.email}
+                  </p>
+                </div>
               </div>
 
-              <div className="min-w-0">
-                <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight truncate">
-                  {fullName}
-                </h1>
-                <p className="text-sm font-medium text-slate-600 truncate">
-                  {user.email}
-                </p>
+              <div className="flex sm:flex-col items-center sm:items-end gap-3 shrink-0">
+                {isActiveMember ? (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
+                    <FiCheckCircle className="h-4 w-4" />
+                    Active Member
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-700 ring-1 ring-inset ring-slate-300">
+                    <FiXCircle className="h-4 w-4" />
+                    Not an Active Member
+                  </span>
+                )}
+
+                <div className="hidden sm:block">
+                  <SignOutLink />
+                </div>
               </div>
             </div>
 
-            <div className="flex sm:flex-col items-center sm:items-end gap-3 shrink-0">
-              {isActiveMember ? (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
-                  <FiCheckCircle className="h-4 w-4" />
-                  Active Member
-                </span>
-              ) : (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-700 ring-1 ring-inset ring-slate-300">
-                  <FiXCircle className="h-4 w-4" />
-                  Not an Active Member
-                </span>
-              )}
-
-              <div className="hidden sm:block">
-                <SignOutLink />
-              </div>
+            {/* Quick Navigation Links Bar */}
+            <div className="pt-2 border-t border-slate-100">
+              <nav className="flex items-center gap-2 overflow-x-auto pb-1 text-xs font-semibold text-slate-600 no-scrollbar">
+                {quickLinks.map((link) => (
+                  <a
+                    key={link.href}
+                    href={link.href}
+                    className="whitespace-nowrap rounded-full bg-slate-100/80 px-3 py-1.5 text-slate-600 transition-colors hover:bg-footloose/10 hover:text-footloose"
+                  >
+                    {link.label}
+                  </a>
+                ))}
+              </nav>
             </div>
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
           <div className="lg:col-span-2 space-y-6">
-            <SectionCard title="Personal Details" icon={<FiUser />}>
+            <SectionCard
+              id="personal-details"
+              title="Personal Details"
+              icon={<FiUser />}
+            >
               <DetailTile
                 icon={<FiUser />}
                 label="Full Name"
@@ -233,7 +260,11 @@ export default async function MembershipPage() {
               />
             </SectionCard>
 
-            <SectionCard title="Institution Details" icon={<FiBookOpen />}>
+            <SectionCard
+              id="institution-details"
+              title="Institution Details"
+              icon={<FiBookOpen />}
+            >
               <DetailTile
                 icon={<FiBookOpen />}
                 label="Institution"
@@ -279,7 +310,10 @@ export default async function MembershipPage() {
 
           <div className="space-y-6">
             {/* Active member card */}
-            <div className="overflow-hidden rounded-3xl bg-white shadow-xl shadow-slate-200/50 border border-slate-100">
+            <div
+              id="membership-status"
+              className="scroll-mt-28 overflow-hidden rounded-3xl bg-white shadow-xl shadow-slate-200/50 border border-slate-100"
+            >
               <div className="p-6">
                 <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500 mb-4">
                   Membership Status
@@ -350,7 +384,10 @@ export default async function MembershipPage() {
             </div>
 
             {/* Course subscriptions card */}
-            <div className="overflow-hidden rounded-3xl bg-white shadow-xl shadow-slate-200/50 border border-slate-100">
+            <div
+              id="course-subscriptions"
+              className="scroll-mt-28 overflow-hidden rounded-3xl bg-white shadow-xl shadow-slate-200/50 border border-slate-100"
+            >
               <div className="p-6">
                 <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500 mb-4">
                   Course Subscriptions
@@ -504,16 +541,21 @@ export default async function MembershipPage() {
 
 /** Section wrapper for a group of related detail tiles */
 function SectionCard({
+  id,
   title,
   icon,
   children,
 }: {
+  id?: string;
   title: string;
   icon: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-3xl bg-white p-6 sm:p-8 shadow-xl shadow-slate-200/50 border border-slate-100">
+    <div
+      id={id}
+      className="scroll-mt-28 rounded-3xl bg-white p-6 sm:p-8 shadow-xl shadow-slate-200/50 border border-slate-100"
+    >
       <h2 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2">
         <span className="text-footloose">{icon}</span>
         {title}
