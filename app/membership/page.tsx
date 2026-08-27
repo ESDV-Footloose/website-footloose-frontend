@@ -14,6 +14,9 @@ import {
   FiAward,
   FiArrowRight,
   FiHash,
+  FiCompass,
+  FiStar,
+  FiLock,
 } from "react-icons/fi";
 
 import { authOptions } from "@/services/auth";
@@ -31,6 +34,19 @@ export const metadata: Metadata = {
 
 async function getCurrentStrapiUser(jwt: string) {
   const response = await fetch(`${STRAPI_API_URL}/api/users/me`, {
+    headers: { Authorization: `Bearer ${jwt}` },
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    return null;
+  }
+
+  return response.json();
+}
+
+async function getSubscriptionState(jwt: string) {
+  const response = await fetch(`${STRAPI_API_URL}/api/subscriptions/me`, {
     headers: { Authorization: `Bearer ${jwt}` },
     cache: "no-store",
   });
@@ -130,6 +146,24 @@ export default async function MembershipPage() {
     `${user.firstName?.[0] ?? ""}${user.lastName?.[0] ?? ""}`.toUpperCase() ||
     user.username?.[0]?.toUpperCase() ||
     "?";
+
+  const subscriptionRes = await getSubscriptionState(session.jwt);
+  const subState = subscriptionRes?.data ?? null;
+  const semester = subState?.semester ?? null;
+  const subscription = subState?.subscription ?? null;
+  const isSubEditable = subState?.isEditable ?? false;
+
+  const registrationDeadline = semester?.registrationDeadline
+    ? new Date(semester.registrationDeadline)
+    : null;
+
+  const isRegistrationOpen =
+    registrationDeadline !== null && registrationDeadline > new Date();
+  const selectedCourses = subscription
+    ? (subState.courses ?? []).filter((c: any) =>
+        subscription.courseIds.includes(c.documentId),
+      )
+    : [];
 
   return (
     <main className="min-h-screen bg-slate-50/50 px-4 pb-16 pt-24 sm:pt-28">
@@ -243,8 +277,8 @@ export default async function MembershipPage() {
             </SectionCard>
           </div>
 
-          {/* Active member card*/}
           <div className="space-y-6">
+            {/* Active member card */}
             <div className="overflow-hidden rounded-3xl bg-white shadow-xl shadow-slate-200/50 border border-slate-100">
               <div className="p-6">
                 <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500 mb-4">
@@ -284,7 +318,6 @@ export default async function MembershipPage() {
                 )}
               </div>
 
-              {/* Divider */}
               <div className="relative border-t-2 border-dashed border-slate-200">
                 <span className="absolute -left-2.5 -top-2.5 h-5 w-5 rounded-full bg-slate-50/50" />
                 <span className="absolute -right-2.5 -top-2.5 h-5 w-5 rounded-full bg-slate-50/50" />
@@ -313,6 +346,149 @@ export default async function MembershipPage() {
                   Questions about your membership or details? Reach out to the
                   board.
                 </p>
+              </div>
+            </div>
+
+            {/* Course subscriptions card */}
+            <div className="overflow-hidden rounded-3xl bg-white shadow-xl shadow-slate-200/50 border border-slate-100">
+              <div className="p-6">
+                <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500 mb-4">
+                  Course Subscriptions
+                </h2>
+
+                {!semester ? (
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500">
+                      <FiCompass className="h-5 w-5" />
+                    </div>
+
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900">
+                        No registration available
+                      </p>
+                      <p className="mt-1 text-xs text-slate-600 leading-relaxed">
+                        There&apos;s no active semester open for course
+                        registration at the moment. Check back later.
+                      </p>
+                    </div>
+                  </div>
+                ) : !isRegistrationOpen ? (
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500">
+                      <FiLock className="h-5 w-5" />
+                    </div>
+
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900">
+                        Registration deadline passed
+                      </p>
+                      <p className="mt-1 text-xs text-slate-600 leading-relaxed">
+                        Registration for {semester.name} is closed.
+                      </p>
+                    </div>
+                  </div>
+                ) : !subscription ? (
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-footloose/10 text-footloose">
+                      <FiCompass className="h-5 w-5" />
+                    </div>
+
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900">
+                        Register for next semester
+                      </p>
+
+                      <p className="mt-1 text-xs text-slate-600">
+                        {semester.name} · Registration deadline:{" "}
+                        {registrationDeadline &&
+                          new Intl.DateTimeFormat("en-UK", {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          }).format(registrationDeadline)}
+                      </p>
+
+                      <p className="mt-2 text-xs text-slate-600 leading-relaxed">
+                        Pick your dance courses
+                        {isActiveMember
+                          ? ", including your priority pick per style."
+                          : "."}
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-xs text-slate-600">
+                      <span>{semester.name}</span>
+                      <span aria-hidden="true">·</span>
+                      {registrationDeadline && (
+                        <span>
+                          Registration deadline:{" "}
+                          {new Intl.DateTimeFormat("en-UK", {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          }).format(registrationDeadline)}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      {selectedCourses.map((course: any) => (
+                        <div
+                          key={course.documentId}
+                          className="flex items-center justify-between gap-2 rounded-xl bg-slate-50/70 border border-slate-200 px-3 py-2"
+                        >
+                          <span className="text-xs font-semibold text-slate-800">
+                            {course.style} &middot; {course.level}
+                          </span>
+
+                          {subscription.priorityCourseIds.includes(
+                            course.documentId,
+                          ) && (
+                            <span className="inline-flex items-center gap-1 text-xs font-semibold text-footloose">
+                              <FiStar className="h-3 w-3" />
+                              Priority
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="relative border-t-2 border-dashed border-slate-200">
+                <span className="absolute -left-2.5 -top-2.5 h-5 w-5 rounded-full bg-slate-50/50" />
+                <span className="absolute -right-2.5 -top-2.5 h-5 w-5 rounded-full bg-slate-50/50" />
+              </div>
+
+              <div className="p-6 pt-5">
+                {!semester ? (
+                  <div className="flex items-center gap-2 text-sm font-semibold text-slate-400">
+                    <FiLock className="h-4 w-4" />
+                    Course registration unavailable
+                  </div>
+                ) : !isRegistrationOpen ? (
+                  <div className="flex items-center gap-2 text-sm font-semibold text-slate-500">
+                    <FiLock className="h-4 w-4" />
+                    Registration is closed
+                  </div>
+                ) : (
+                  <Link
+                    href="/membership/course-subscription"
+                    className="group flex items-center justify-between text-sm font-semibold text-footloose"
+                  >
+                    {subscription
+                      ? "Edit your subscription"
+                      : "Manage course subscriptions"}
+                    <FiArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                  </Link>
+                )}
               </div>
             </div>
 
