@@ -339,25 +339,32 @@ export default function CourseSubscriptionForm({
 
                       {isSelected && course.isPartnerDance && (
                         <div className="mt-3 flex flex-wrap items-center gap-3 pl-8">
-                          <div className="inline-flex rounded-lg border border-slate-300 overflow-hidden">
-                            {(["leader", "follower"] as const).map((role) => (
-                              <button
-                                key={role}
-                                type="button"
-                                onClick={() =>
-                                  updateSelection(course.documentId, { role })
-                                }
-                                className={`px-3 py-1.5 text-xs font-semibold cursor-pointer transition-colors ${
-                                  sel?.role === role
-                                    ? "bg-footloose text-white"
-                                    : "bg-white text-slate-600 hover:bg-slate-50"
-                                }`}
-                              >
-                                {role === "leader" ? "Leader" : "Follower"}
-                              </button>
-                            ))}
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium text-slate-600">
+                              I am a
+                            </span>
+
+                            <div className="inline-flex rounded-lg border border-slate-300 overflow-hidden">
+                              {(["leader", "follower"] as const).map((role) => (
+                                <button
+                                  key={role}
+                                  type="button"
+                                  onClick={() =>
+                                    updateSelection(course.documentId, { role })
+                                  }
+                                  className={`px-3 py-1.5 text-xs font-semibold cursor-pointer transition-colors ${
+                                    sel?.role === role
+                                      ? "bg-footloose text-white"
+                                      : "bg-white text-slate-600 hover:bg-slate-50"
+                                  }`}
+                                >
+                                  {role === "leader" ? "Leader" : "Follower"}
+                                </button>
+                              ))}
+                            </div>
                           </div>
-                          <div className="flex items-center gap-2 flex-1 min-w-[200px]">
+
+                          <div className="flex items-center gap-2 flex-1 min-w-50">
                             <FiUsers className="h-4 w-4 text-slate-400 shrink-0" />
                             <input
                               type="text"
