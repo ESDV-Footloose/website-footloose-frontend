@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { getPage, type StrapiPageSection } from "@/services/strapi";
 import RichText from "@/components/modules/RichText";
 import SmallBanner from "@/components/modules/SmallBanner";
+import EventsSection from "@/components/modules/EventsSection";
 
 /**
  * Renders a single page section based on its component type
@@ -18,6 +19,8 @@ function renderSection(section: StrapiPageSection, index: number) {
       return <RichText key={index} content={section.content} />;
     case "page.banner":
       return <SmallBanner key={index} {...section} />;
+    case "page.events-section":
+      return <EventsSection key={index} heading={section.heading} />;
     default:
       return null;
   }
