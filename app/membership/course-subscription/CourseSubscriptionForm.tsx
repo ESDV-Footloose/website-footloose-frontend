@@ -2,37 +2,41 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { FiStar, FiCheckCircle, FiInfo } from "react-icons/fi";
+import { FiStar, FiCheckCircle, FiInfo, FiUsers } from "react-icons/fi";
 
-type Course = { documentId: string; style: string; level: string };
-type Subscription = { courseIds: string[]; priorityCourseIds: string[] };
+type Course = {
+  documentId: string;
+  style: string;
+  level: string;
+  isPartnerDance: boolean;
+};
+type SelectionRecord = {
+  role: "leader" | "follower" | "solo";
+  partnerName: string;
+};
+type Subscription = {
+  selections: {
+    courseId: string;
+    role: "leader" | "follower" | "solo";
+    partnerName: string | null;
+    isPriority: boolean;
+  }[];
+};
 
 const DEFAULT_LEVEL_ORDER = ["1", "2", "3", "4", "demoteam"];
 const STYLE_LEVEL_ORDER: Record<string, string[]> = {
   ballroom: ["bronze", "silver", "silverstar", "gold", "topclass"],
 };
 
-/**
- * Normalizes a level string for comparison: lowercase, strip whitespace.
- */
 function normalize(value: string) {
   return value.trim().toLowerCase().replace(/\s+/g, "");
 }
 
-/**
- * Shortens numeric levels like "One (1)" down to just "1". Levels without
- * a parenthesized digit (e.g. "Demoteam", "Bronze") pass through unchanged.
- */
 function getLevelDisplay(level: string): string {
   const match = level.match(/\((\d+)\)/);
   return match ? match[1] : level;
 }
 
-/**
- * Returns the sort index for a course's level within its dance style.
- * Ballroom uses its own bronze→topclass order; everything else defaults
- * to numeric 1-4 then demoteam. Unrecognized levels sort last.
- */
 function levelSortKey(style: string, level: string): number {
   const order = STYLE_LEVEL_ORDER[normalize(style)] ?? DEFAULT_LEVEL_ORDER;
   const display = normalize(getLevelDisplay(level));
@@ -55,11 +59,22 @@ export default function CourseSubscriptionForm({
   subscription: Subscription | null;
 }) {
   const router = useRouter();
-  const [selected, setSelected] = useState<Set<string>>(
-    new Set(subscription?.courseIds ?? []),
+
+  const [selections, setSelections] = useState<Map<string, SelectionRecord>>(
+    () =>
+      new Map(
+        (subscription?.selections ?? []).map((s) => [
+          s.courseId,
+          { role: s.role, partnerName: s.partnerName ?? "" },
+        ]),
+      ),
   );
   const [priorities, setPriorities] = useState<Set<string>>(
-    new Set(subscription?.priorityCourseIds ?? []),
+    new Set(
+      (subscription?.selections ?? [])
+        .filter((s) => s.isPriority)
+        .map((s) => s.courseId),
+    ),
   );
   const [agreed, setAgreed] = useState(Boolean(subscription));
   const [submitting, setSubmitting] = useState(false);
@@ -67,6 +82,11 @@ export default function CourseSubscriptionForm({
     type: "error" | "success";
     text: string;
   } | null>(null);
+
+  const coursesById = useMemo(
+    () => new Map(courses.map((c) => [c.documentId, c])),
+    [courses],
+  );
 
   const stylesMap = useMemo(() => {
     const map = new Map<string, Course[]>();
@@ -82,21 +102,15 @@ export default function CourseSubscriptionForm({
     return map;
   }, [courses]);
 
-  function selectedForStyle(style: string, selectedSet: Set<string>) {
+  function selectedForStyle(style: string) {
     return (stylesMap.get(style) ?? []).filter((c) =>
-      selectedSet.has(c.documentId),
+      selections.has(c.documentId),
     );
   }
 
-  /**
-   * Recomputes the priority pick for a single style after a selection
-   * change. Auto-assigns priority when exactly one course in the style
-   * is selected; preserves an existing manual pick when 2+ remain
-   * selected; clears priority entirely when none are selected.
-   */
   function recalcPriorityForStyle(
     style: string,
-    nextSelected: Set<string>,
+    nextSelectedIds: Set<string>,
     prevPriorities: Set<string>,
   ): Set<string> {
     const styleIds = (stylesMap.get(style) ?? []).map((c) => c.documentId);
@@ -105,7 +119,7 @@ export default function CourseSubscriptionForm({
 
     if (!isActiveMember) return next;
 
-    const stillSelected = styleIds.filter((id) => nextSelected.has(id));
+    const stillSelected = styleIds.filter((id) => nextSelectedIds.has(id));
     if (stillSelected.length === 1) {
       next.add(stillSelected[0]);
     } else if (stillSelected.length > 1) {
@@ -117,31 +131,54 @@ export default function CourseSubscriptionForm({
 
   const blockedStyles = isActiveMember
     ? [...stylesMap.keys()].filter((style) => {
-        const picked = selectedForStyle(style, selected);
+        const picked = selectedForStyle(style);
         return (
           picked.length > 1 && !picked.some((c) => priorities.has(c.documentId))
         );
       })
     : [];
 
+  // Courses selected but missing required role/partner info.
+  const incompleteCourses = courses.filter((course) => {
+    const sel = selections.get(course.documentId);
+    if (!sel) return false;
+    if (!course.isPartnerDance) return false;
+    return sel.role === "solo" || !sel.partnerName.trim();
+  });
+
   const canSubmit =
     isEditable &&
     agreed &&
-    selected.size > 0 &&
+    selections.size > 0 &&
     blockedStyles.length === 0 &&
+    incompleteCourses.length === 0 &&
     !submitting;
 
   function toggleCourse(course: Course) {
-    setSelected((prev) => {
-      const next = new Set(prev);
+    setSelections((prev) => {
+      const next = new Map(prev);
       if (next.has(course.documentId)) {
         next.delete(course.documentId);
       } else {
-        next.add(course.documentId);
+        next.set(course.documentId, {
+          role: course.isPartnerDance ? "leader" : "solo",
+          partnerName: "",
+        });
       }
+      const nextIds = new Set(next.keys());
       setPriorities((prevP) =>
-        recalcPriorityForStyle(course.style, next, prevP),
+        recalcPriorityForStyle(course.style, nextIds, prevP),
       );
+      return next;
+    });
+  }
+
+  function updateSelection(courseId: string, patch: Partial<SelectionRecord>) {
+    setSelections((prev) => {
+      const next = new Map(prev);
+      const current = next.get(courseId);
+      if (!current) return prev;
+      next.set(courseId, { ...current, ...patch });
       return next;
     });
   }
@@ -164,8 +201,13 @@ export default function CourseSubscriptionForm({
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          courseIds: [...selected],
-          priorityCourseIds: [...priorities],
+          selections: [...selections.entries()].map(([courseId, sel]) => ({
+            courseId,
+            role: sel.role,
+            partnerName:
+              sel.role === "solo" ? undefined : sel.partnerName.trim(),
+            isPriority: priorities.has(courseId),
+          })),
           agreedToPay: agreed,
         }),
       });
@@ -186,7 +228,7 @@ export default function CourseSubscriptionForm({
   }
 
   if (!isEditable) {
-    const rows = courses.filter((c) => selected.has(c.documentId));
+    const rows = courses.filter((c) => selections.has(c.documentId));
     return (
       <div className="rounded-3xl bg-white p-6 sm:p-8 shadow-xl shadow-slate-200/50 border border-slate-100">
         <h2 className="text-xl font-bold text-slate-900 mb-4">
@@ -198,26 +240,37 @@ export default function CourseSubscriptionForm({
           </p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {rows.map((course) => (
-              <div
-                key={course.documentId}
-                className="flex items-center justify-between gap-3 p-4 rounded-2xl bg-slate-50/70 border border-slate-200"
-              >
-                <div>
-                  <p className="text-sm font-semibold uppercase tracking-wider text-slate-500">
-                    {course.style}
-                  </p>
-                  <p className="text-sm font-semibold text-slate-800">
-                    {getLevelDisplay(course.level)}
-                  </p>
+            {rows.map((course) => {
+              const sel = selections.get(course.documentId)!;
+              return (
+                <div
+                  key={course.documentId}
+                  className="flex items-start justify-between gap-3 p-4 rounded-2xl bg-slate-50/70 border border-slate-200"
+                >
+                  <div>
+                    <p className="text-sm font-semibold uppercase tracking-wider text-slate-500">
+                      {course.style}
+                    </p>
+                    <p className="text-sm font-semibold text-slate-800">
+                      {getLevelDisplay(course.level)}
+                    </p>
+                    {course.isPartnerDance ? (
+                      <p className="mt-1 text-sm text-slate-600">
+                        {sel.role === "leader" ? "Leader" : "Follower"} with{" "}
+                        {sel.partnerName || "—"}
+                      </p>
+                    ) : (
+                      <p className="mt-1 text-sm text-slate-600">Solo dancer</p>
+                    )}
+                  </div>
+                  {priorities.has(course.documentId) && (
+                    <span className="inline-flex items-center gap-1 text-sm font-semibold text-footloose shrink-0">
+                      <FiStar className="h-4 w-4" /> Priority
+                    </span>
+                  )}
                 </div>
-                {priorities.has(course.documentId) && (
-                  <span className="inline-flex items-center gap-1 text-sm font-semibold text-footloose">
-                    <FiStar className="h-4 w-4" /> Priority
-                  </span>
-                )}
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
@@ -225,7 +278,7 @@ export default function CourseSubscriptionForm({
   }
 
   const stylesWithSelection = [...stylesMap.keys()].filter(
-    (style) => selectedForStyle(style, selected).length > 0,
+    (style) => selectedForStyle(style).length > 0,
   ).length;
 
   return (
@@ -233,7 +286,7 @@ export default function CourseSubscriptionForm({
       {/* Course selection */}
       <div className="lg:col-span-2 space-y-5">
         {[...stylesMap.entries()].map(([style, styleCourses]) => {
-          const picked = selectedForStyle(style, selected);
+          const picked = selectedForStyle(style);
           const priorityId =
             picked.find((c) => priorities.has(c.documentId))?.documentId ?? "";
 
@@ -252,34 +305,81 @@ export default function CourseSubscriptionForm({
                 )}
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-3">
                 {styleCourses.map((course) => {
-                  const isSelected = selected.has(course.documentId);
+                  const isSelected = selections.has(course.documentId);
+                  const sel = selections.get(course.documentId);
                   const isPriority = priorities.has(course.documentId);
+
                   return (
-                    <label
+                    <div
                       key={course.documentId}
-                      className={`flex items-center justify-between gap-3 rounded-2xl border px-4 py-3.5 cursor-pointer transition-colors ${
+                      className={`rounded-2xl border px-4 py-3.5 transition-colors ${
                         isSelected
                           ? "bg-footloose/5 border-footloose/40"
                           : "bg-slate-50/70 border-slate-200 hover:bg-slate-100"
                       }`}
                     >
-                      <span className="flex items-center gap-3">
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          onChange={() => toggleCourse(course)}
-                          className="h-5 w-5 rounded border-slate-300 text-footloose focus:ring-footloose"
-                        />
-                        <span className="text-sm font-semibold text-slate-800">
-                          {style} {getLevelDisplay(course.level)}
+                      <label className="flex items-center justify-between gap-3 cursor-pointer">
+                        <span className="flex items-center gap-3">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => toggleCourse(course)}
+                            className="h-5 w-5 rounded border-slate-300 text-footloose focus:ring-footloose"
+                          />
+                          <span className="text-sm font-semibold text-slate-800">
+                            {style} {getLevelDisplay(course.level)}
+                          </span>
                         </span>
-                      </span>
-                      {isPriority && (
-                        <FiStar className="h-5 w-5 text-footloose shrink-0" />
+                        {isPriority && (
+                          <FiStar className="h-5 w-5 text-footloose shrink-0" />
+                        )}
+                      </label>
+
+                      {isSelected && course.isPartnerDance && (
+                        <div className="mt-3 flex flex-wrap items-center gap-3 pl-8">
+                          <div className="inline-flex rounded-lg border border-slate-300 overflow-hidden">
+                            {(["leader", "follower"] as const).map((role) => (
+                              <button
+                                key={role}
+                                type="button"
+                                onClick={() =>
+                                  updateSelection(course.documentId, { role })
+                                }
+                                className={`px-3 py-1.5 text-xs font-semibold cursor-pointer transition-colors ${
+                                  sel?.role === role
+                                    ? "bg-footloose text-white"
+                                    : "bg-white text-slate-600 hover:bg-slate-50"
+                                }`}
+                              >
+                                {role === "leader" ? "Leader" : "Follower"}
+                              </button>
+                            ))}
+                          </div>
+                          <div className="flex items-center gap-2 flex-1 min-w-[200px]">
+                            <FiUsers className="h-4 w-4 text-slate-400 shrink-0" />
+                            <input
+                              type="text"
+                              placeholder="Partner's full name"
+                              value={sel?.partnerName ?? ""}
+                              onChange={(e) =>
+                                updateSelection(course.documentId, {
+                                  partnerName: e.target.value,
+                                })
+                              }
+                              className="flex-1 rounded-lg border border-slate-300 px-3 py-1.5 text-sm"
+                            />
+                          </div>
+                        </div>
                       )}
-                    </label>
+
+                      {isSelected && !course.isPartnerDance && (
+                        <p className="mt-2 pl-8 text-xs font-medium text-slate-500">
+                          Registered as a solo dancer.
+                        </p>
+                      )}
+                    </div>
                   );
                 })}
               </div>
@@ -329,33 +429,40 @@ export default function CourseSubscriptionForm({
               Summary
             </h2>
             <p className="text-sm text-slate-600">
-              {selected.size} course{selected.size === 1 ? "" : "s"} selected
-              across {stylesWithSelection} styles
+              {selections.size} course{selections.size === 1 ? "" : "s"}{" "}
+              selected across {stylesWithSelection} styles
             </p>
           </div>
 
-          {selected.size > 0 && (
+          {selections.size > 0 && (
             <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
-              {courses
-                .filter((c) => selected.has(c.documentId))
-                .map((course) => (
+              {[...selections.keys()].map((courseId) => {
+                const course = coursesById.get(courseId);
+                const sel = selections.get(courseId)!;
+                if (!course) return null;
+                return (
                   <div
-                    key={course.documentId}
+                    key={courseId}
                     className="flex items-center justify-between gap-2 rounded-xl bg-slate-50/70 border border-slate-200 px-3.5 py-2.5"
                   >
                     <div className="min-w-0">
                       <p className="text-sm font-semibold text-slate-800 truncate">
-                        {course.style}
+                        {course.style} {getLevelDisplay(course.level)}
                       </p>
                       <p className="text-sm text-slate-500 truncate">
-                        {getLevelDisplay(course.level)}
+                        {course.isPartnerDance
+                          ? `${sel.role === "leader" ? "Leader" : "Follower"}${
+                              sel.partnerName ? ` w/ ${sel.partnerName}` : ""
+                            }`
+                          : "Solo"}
                       </p>
                     </div>
-                    {priorities.has(course.documentId) && (
+                    {priorities.has(courseId) && (
                       <FiStar className="h-4 w-4 text-footloose shrink-0" />
                     )}
                   </div>
-                ))}
+                );
+              })}
             </div>
           )}
 
@@ -376,6 +483,18 @@ export default function CourseSubscriptionForm({
               course.
             </span>
           </label>
+
+          {incompleteCourses.length > 0 && (
+            <div className="flex items-start gap-2 rounded-xl bg-amber-50/70 border border-amber-200 px-3.5 py-3">
+              <FiInfo className="h-4 w-4 mt-0.5 shrink-0 text-amber-600" />
+              <p className="text-sm font-medium text-amber-800">
+                Enter your partner&apos;s name for:{" "}
+                {incompleteCourses
+                  .map((c) => `${c.style} ${getLevelDisplay(c.level)}`)
+                  .join(", ")}
+              </p>
+            </div>
+          )}
 
           {blockedStyles.length > 0 && (
             <div className="flex items-start gap-2 rounded-xl bg-amber-50/70 border border-amber-200 px-3.5 py-3">
@@ -400,7 +519,7 @@ export default function CourseSubscriptionForm({
             type="button"
             disabled={!canSubmit}
             onClick={save}
-            className="w-full rounded-xl bg-footloose px-4 py-3.5 text-base font-semibold text-white transition-opacity hover:opacity-90 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+            className="w-full rounded-xl bg-footloose px-4 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {submitting ? "Saving..." : "Save subscriptions"}
           </button>
