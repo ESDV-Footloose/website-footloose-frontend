@@ -72,6 +72,11 @@ function formatDate(dateString?: string) {
   }
 }
 
+export function getLevelDisplay(level: string): string {
+  const match = level.match(/\((\d+)\)/);
+  return match ? match[1] : level;
+}
+
 export default async function MembershipPage() {
   const session = await getServerSession(authOptions);
 
@@ -485,7 +490,7 @@ export default async function MembershipPage() {
                               className="flex items-center justify-between gap-2 rounded-xl bg-slate-50/70 border border-slate-200 px-3 py-2"
                             >
                               <span className="text-xs font-semibold text-slate-800">
-                                {course.style} &middot; {course.level}
+                                {course.style} {getLevelDisplay(course.level)}
                               </span>
                               {sel.isPriority && (
                                 <span className="inline-flex items-center gap-1 text-xs font-semibold text-footloose">
