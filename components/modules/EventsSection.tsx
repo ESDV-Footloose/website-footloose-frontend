@@ -38,20 +38,13 @@ type EventListItem = {
 /**
  * Extracts a plain-text preview from Strapi rich text (blocks) content.
  */
-function getDescriptionPreview(
-  blocks: RichTextBlock[],
-  maxLength = 180,
-): string {
-  const text = blocks
+function getDescriptionPreview(blocks: RichTextBlock[]): string {
+  return blocks
     .map((block) =>
       (block.children ?? []).map((child) => child.text ?? "").join(""),
     )
     .join(" ")
     .trim();
-
-  if (text.length <= maxLength) return text;
-
-  return text.slice(0, maxLength).trimEnd() + "…";
 }
 
 async function getUpcomingEvents(): Promise<EventListItem[]> {
@@ -142,7 +135,7 @@ export default async function EventsSection({ heading }: { heading?: string }) {
                     </p>
                   </div>
 
-                  <p className="text-sm text-slate-600 leading-relaxed">
+                  <p className="truncate text-sm text-slate-600">
                     {getDescriptionPreview(event.description)}
                   </p>
 
