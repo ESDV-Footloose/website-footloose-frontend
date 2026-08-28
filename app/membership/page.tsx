@@ -158,11 +158,9 @@ export default async function MembershipPage() {
 
   const isRegistrationOpen =
     registrationDeadline !== null && registrationDeadline > new Date();
-  const selectedCourses = subscription
-    ? (subState.courses ?? []).filter((c: any) =>
-        subscription.courseIds.includes(c.documentId),
-      )
-    : [];
+  const selectionsByCourseId = subscription
+    ? new Map(subscription.selections.map((s: any) => [s.courseId, s]))
+    : new Map();
 
   const quickLinks = [
     { label: "Personal Details", href: "#personal-details" },
@@ -475,25 +473,30 @@ export default async function MembershipPage() {
                     </div>
 
                     <div className="space-y-2">
-                      {selectedCourses.map((course: any) => (
-                        <div
-                          key={course.documentId}
-                          className="flex items-center justify-between gap-2 rounded-xl bg-slate-50/70 border border-slate-200 px-3 py-2"
-                        >
-                          <span className="text-xs font-semibold text-slate-800">
-                            {course.style} &middot; {course.level}
-                          </span>
-
-                          {subscription.priorityCourseIds.includes(
-                            course.documentId,
-                          ) && (
-                            <span className="inline-flex items-center gap-1 text-xs font-semibold text-footloose">
-                              <FiStar className="h-3 w-3" />
-                              Priority
-                            </span>
-                          )}
-                        </div>
-                      ))}
+                      {[...selectionsByCourseId.entries()].map(
+                        ([courseId, sel]: [string, any]) => {
+                          const course = (subState.courses ?? []).find(
+                            (c: any) => c.documentId === courseId,
+                          );
+                          if (!course) return null;
+                          return (
+                            <div
+                              key={courseId}
+                              className="flex items-center justify-between gap-2 rounded-xl bg-slate-50/70 border border-slate-200 px-3 py-2"
+                            >
+                              <span className="text-xs font-semibold text-slate-800">
+                                {course.style} &middot; {course.level}
+                              </span>
+                              {sel.isPriority && (
+                                <span className="inline-flex items-center gap-1 text-xs font-semibold text-footloose">
+                                  <FiStar className="h-3 w-3" />
+                                  Priority
+                                </span>
+                              )}
+                            </div>
+                          );
+                        },
+                      )}
                     </div>
                   </div>
                 )}
