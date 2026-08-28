@@ -88,11 +88,31 @@ export type StrapiSmallBanner = {
 };
 
 /**
+ * Strapi events section structure which renders all upcoming events live,
+ * fetched from the Event collection type rather than stored on the page.
+ *
+ * @internal
+ */
+export type StrapiEventsSection = {
+  /**
+   * The events section component.
+   */
+  __component: "page.events-section";
+  /**
+   * Optional heading displayed above the events grid.
+   */
+  heading?: string;
+};
+
+/**
  * Union of all possible page section components.
  *
  * @internal
  */
-export type StrapiPageSection = StrapiSection | StrapiSmallBanner;
+export type StrapiPageSection =
+  | StrapiSection
+  | StrapiSmallBanner
+  | StrapiEventsSection;
 
 /**
  * Strapi page structure.
@@ -212,6 +232,27 @@ export async function getNavbar(): Promise<NavItem[]> {
   const items = res?.data?.items || res?.data?.attributes?.items || [];
 
   return mapNavbar(items ?? []);
+}
+
+/**
+ * Fetches the first `page.banner` section from a page by slug, for reuse
+ * outside the normal page-section rendering flow (e.g. showing the same
+ * banner on a detail page belonging to that section).
+ *
+ * @param slug The page slug to fetch the banner from.
+ * @returns The banner section, or null if the page or banner doesn't exist.
+ */
+export async function getPageBanner(
+  slug: string,
+): Promise<StrapiSmallBanner | null> {
+  const page = await getPage(slug);
+  if (!page) return null;
+
+  const banner = page.pageSections.find(
+    (section) => section.__component === "page.banner",
+  ) as StrapiSmallBanner | undefined;
+
+  return banner ?? null;
 }
 
 /**
