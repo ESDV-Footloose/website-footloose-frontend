@@ -4,17 +4,35 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FiStar, FiCheckCircle, FiInfo, FiUsers } from "react-icons/fi";
 
+/**
+ * Represents a dance course members can subscribe for.
+ */
 type Course = {
+  /** Strapi document ID of the course. */
   documentId: string;
+  /** Dance style (ballroom, ballet, etc.). */
   style: string;
+  /** The level of the course. */
   level: string;
+  /** Whether the course requires participants to register with a partner. */
   isPartnerDance: boolean;
 };
+
+/**
+ * Stores the user's additional information for a selected course.
+ */
 type SelectionRecord = {
+  /** The role a user has for this dance course. */
   role: "leader" | "follower" | "solo";
+  /** The name of the dance partner, if applicable. */
   partnerName: string;
 };
+
+/**
+ * Represents an existing subscription.
+ */
 type Subscription = {
+  /** The courses assigned to this subscription. */
   selections: {
     courseId: string;
     role: "leader" | "follower" | "solo";
@@ -23,20 +41,41 @@ type Subscription = {
   }[];
 };
 
+/** Orders for dance styles from lowest to highest level. */
 const DEFAULT_LEVEL_ORDER = ["1", "2", "3", "4", "demoteam"];
 const STYLE_LEVEL_ORDER: Record<string, string[]> = {
   ballroom: ["bronze", "silver", "silverstar", "gold", "topclass"],
 };
 
+/**
+ * Normalizes a string for comparisons by removing whitespace and setting to lowercase.
+ *
+ * @param value The value to normalize.
+ * @returns The normalized value.
+ */
 function normalize(value: string) {
   return value.trim().toLowerCase().replace(/\s+/g, "");
 }
 
+/**
+ * Extracts nicely formatted level from level string.
+ * Levels must be represented by more than a number in Strapi.
+ *
+ * @param level The raw course level.
+ * @returns The display-friendly level.
+ */
 function getLevelDisplay(level: string): string {
   const match = level.match(/\((\d+)\)/);
   return match ? match[1] : level;
 }
 
+/**
+ * Calculates the sorting position of a course level within a dance style.
+ *
+ * @param style Dance style of the course.
+ * @param level Raw course level.
+ * @returns Sorting where lower levels appear earlier.
+ */
 function levelSortKey(style: string, level: string): number {
   const order = STYLE_LEVEL_ORDER[normalize(style)] ?? DEFAULT_LEVEL_ORDER;
   const display = normalize(getLevelDisplay(level));
@@ -47,6 +86,12 @@ function levelSortKey(style: string, level: string): number {
   return idx;
 }
 
+/**
+ * Course subscription form used to select courses, partner, and priorities.
+ *
+ * @param param0 Course data and the user's current subscription state.
+ * @returns The course subscription form.
+ */
 export default function CourseSubscriptionForm({
   courses,
   isActiveMember,

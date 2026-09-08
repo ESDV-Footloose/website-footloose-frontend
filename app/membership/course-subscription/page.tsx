@@ -17,6 +17,13 @@ export const metadata: Metadata = {
   description: "Register for dance courses this semester.",
 };
 
+/**
+ * Fetches data from the authenticated Strapi API.
+ *
+ * @param path The Strapi API path without the api/ prefix.
+ * @param jwt The authenticated user's Strapi JWT.
+ * @returns  The parsed JSON response (or null for failure).
+ */
 async function strapiFetch(path: string, jwt: string) {
   const res = await fetch(`${STRAPI_API_URL}/api/${path}`, {
     headers: { Authorization: `Bearer ${jwt}` },
@@ -26,16 +33,29 @@ async function strapiFetch(path: string, jwt: string) {
   return res.json();
 }
 
+/**
+ * Renders the course subscription page for an approved member.
+ * Depending on authentication and membership status, it:
+ * - redirects unauthenticated or unapproved users
+ * - shows an error if the subscription state cannot be loaded
+ * - informs the user when registration is unavailable
+ * - displays the course subscription form
+ *
+ * @returns The course subscription page.
+ */
 export default async function CourseSubscriptionPage() {
   const session = await getServerSession(authOptions);
+  // Unauthenticated members need to log in.
   if (!session?.jwt) redirect("/login");
 
   const userData = await strapiFetch("users/me", session.jwt);
   if (!userData) redirect("/login");
+  // Only approved members can register for courses.
   if (!userData.approved) redirect("/membership");
 
   const stateRes = await strapiFetch("subscriptions/me", session.jwt);
 
+  // Shows an error if the information could not be loaded.
   if (!stateRes) {
     return (
       <main className="min-h-screen bg-slate-50/50 px-4 pb-16 pt-24 sm:pt-28 flex items-center justify-center">
@@ -57,6 +77,7 @@ export default async function CourseSubscriptionPage() {
   const state = stateRes.data;
   const semester = state.semester;
 
+  // Shown if there is no active semester.
   if (!semester) {
     return (
       <main className="min-h-screen bg-slate-50/50 px-4 pb-16 pt-24 sm:pt-28 flex items-center justify-center">
@@ -78,6 +99,7 @@ export default async function CourseSubscriptionPage() {
 
   const deadline = new Date(semester.registrationDeadline);
 
+  // Shown when a member can subscribe.
   return (
     <main className="min-h-screen bg-slate-50/50 px-4 pb-16 pt-24 sm:pt-28">
       <div className="mx-auto max-w-6xl space-y-6">

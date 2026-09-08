@@ -32,6 +32,12 @@ export const metadata: Metadata = {
   description: "Your ESDV Footloose membership status.",
 };
 
+/**
+ * Retrieves the currently authenticated user from Strapi.
+ *
+ * @param jwt The authenticated user's Strapi JWT.
+ * @returns The current user, or null if the request fails.
+ */
 async function getCurrentStrapiUser(jwt: string) {
   const response = await fetch(`${STRAPI_API_URL}/api/users/me`, {
     headers: { Authorization: `Bearer ${jwt}` },
@@ -45,6 +51,12 @@ async function getCurrentStrapiUser(jwt: string) {
   return response.json();
 }
 
+/**
+ * Retrieves the authenticated user's current course subscription state.
+ *
+ * @param jwt The authenticated user's Strapi JWT.
+ * @returns The subscription state, or null if the request fails.
+ */
 async function getSubscriptionState(jwt: string) {
   const response = await fetch(`${STRAPI_API_URL}/api/subscriptions/me`, {
     headers: { Authorization: `Bearer ${jwt}` },
@@ -58,7 +70,12 @@ async function getSubscriptionState(jwt: string) {
   return response.json();
 }
 
-/** Formats dates nicely */
+/**
+ * Formats an ISO date string for display.
+ *
+ * @param dateString Date string to format.
+ * @returns A formatted date string, the original value if parsing fails.
+ */
 function formatDate(dateString?: string) {
   if (!dateString) return undefined;
   try {
@@ -72,11 +89,26 @@ function formatDate(dateString?: string) {
   }
 }
 
+/**
+ * Extracts a nicer readable course level from raw level values.
+ * For example, Two (2) is set to 2.
+ *
+ * @param level Raw course level.
+ * @returns The display-friendly level.
+ */
 export function getLevelDisplay(level: string): string {
   const match = level.match(/\((\d+)\)/);
   return match ? match[1] : level;
 }
 
+/**
+ * Renders the membership page for the currently authenticated user.
+ * - Pending member: see a pending screen
+ * - Approved members: see membership information, course registration state.
+ * - Unauthenticated: redirected to login.
+ *
+ * @returns The membership page or a redirect for unauthenticated users.
+ */
 export default async function MembershipPage() {
   const session = await getServerSession(authOptions);
 
@@ -547,7 +579,15 @@ export default async function MembershipPage() {
   );
 }
 
-/** Section wrapper for a group of related detail tiles */
+/**
+ * Section wrapper used to group related membership details.
+ *
+ * @param props Section configuration and child content.
+ * @param props.id Optional HTML ID used for in-page navigation.
+ * @param props.title Section heading.
+ * @param props.icon Icon displayed next to the heading.
+ * @param props.children Detail tiles displayed inside the section.
+ */
 function SectionCard({
   id,
   title,
@@ -574,7 +614,15 @@ function SectionCard({
   );
 }
 
-/** Helper tile component for layout */
+/**
+ * Display one membership detail as reusable tile.
+ * If no value is available, shows "Not provided".
+ *
+ * @param props Detail tile configuration.
+ * @param props.icon Icon representing the detail.
+ * @param props.label Lable shown above the value.
+ * @param props.value Value to display.
+ */
 function DetailTile({
   icon,
   label,
