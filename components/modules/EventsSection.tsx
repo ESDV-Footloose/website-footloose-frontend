@@ -1,7 +1,15 @@
 import Link from "next/link";
 import Image from "next/image";
-import { FiCalendar, FiUsers, FiUnlock, FiLock } from "react-icons/fi";
+import { getServerSession } from "next-auth/next";
+import {
+  FiCalendar,
+  FiUsers,
+  FiUnlock,
+  FiLock,
+  FiArrowRight,
+} from "react-icons/fi";
 
+import { authOptions } from "@/services/auth";
 import Container from "@/components/containers/Container";
 
 const STRAPI_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL?.replace(
@@ -52,8 +60,9 @@ function getDescriptionPreview(blocks: RichTextBlock[]): string {
     .trim();
 }
 
-async function getUpcomingEvents(): Promise<EventListItem[]> {
+async function getUpcomingEvents(jwt?: string): Promise<EventListItem[]> {
   const res = await fetch(`${STRAPI_API_URL}/api/events/list`, {
+    headers: jwt ? { Authorization: `Bearer ${jwt}` } : {},
     cache: "no-store",
   });
 
@@ -75,8 +84,18 @@ function formatDate(dateString: string) {
   }).format(new Date(dateString));
 }
 
-export default async function EventsSection({ heading }: { heading?: string }) {
-  const events = await getUpcomingEvents();
+export default async function EventsSection({
+  heading,
+  previewOnly,
+}: {
+  heading?: string;
+  previewOnly?: boolean;
+}) {
+  const session = await getServerSession(authOptions);
+  const isLoggedIn = Boolean(session?.jwt);
+
+  const allEvents = await getUpcomingEvents(session?.jwt);
+  const events = previewOnly ? allEvents.slice(0, 3) : allEvents;
 
   return (
     <Container>
@@ -90,85 +109,107 @@ export default async function EventsSection({ heading }: { heading?: string }) {
         {events.length === 0 ? (
           <div className="rounded-3xl bg-white p-8 shadow-xl shadow-slate-200/50 border border-slate-100 text-center">
             <p className="text-base text-slate-600">
-              No upcoming events right now. Check back soon.
+              There are no events right now. Check back soon.
             </p>
+            {!isLoggedIn && (
+              <p className="mt-2 text-sm text-slate-500">
+                <Link href="/login" className="font-semibold text-footloose">
+                  Log in
+                </Link>{" "}
+                to also see members-only events.
+              </p>
+            )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {events.map((event) => (
-              <Link
-                key={event.documentId}
-                href={`/events/${event.slug}`}
-                className="group overflow-hidden rounded-3xl bg-white shadow-xl shadow-slate-200/50 border border-slate-100 transition-transform hover:-translate-y-0.5"
-              >
-                <div className="relative h-44 w-full bg-slate-100">
-                  {event.image ? (
-                    <Image
-                      src={`${STRAPI_API_URL}${event.image.url}`}
-                      alt={event.image.alternativeText ?? event.name}
-                      fill
-                      unoptimized
-                      className="object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-full items-center justify-center text-slate-400">
-                      <FiCalendar className="h-10 w-10" />
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {events.map((event) => (
+                <Link
+                  key={event.documentId}
+                  href={`/events/${event.slug}`}
+                  className="group overflow-hidden rounded-3xl bg-white shadow-xl shadow-slate-200/50 border border-slate-100 transition-transform hover:-translate-y-0.5"
+                >
+                  <div className="relative h-44 w-full bg-slate-100">
+                    {event.image ? (
+                      <Image
+                        src={`${STRAPI_API_URL}${event.image.url}`}
+                        alt={event.image.alternativeText ?? event.name}
+                        fill
+                        unoptimized
+                        className="object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full items-center justify-center text-slate-400">
+                        <FiCalendar className="h-10 w-10" />
+                      </div>
+                    )}
+
+                    {!event.requiresSubscription ? (
+                      <span className="absolute top-3 right-3 inline-flex items-center gap-1 rounded-full bg-emerald-50/95 px-3 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
+                        <FiUnlock className="h-3.5 w-3.5" />
+                        No signup needed
+                      </span>
+                    ) : event.isFull ? (
+                      <span className="absolute top-3 right-3 inline-flex items-center gap-1 rounded-full bg-slate-900/90 px-3 py-1 text-xs font-semibold text-white">
+                        Full
+                      </span>
+                    ) : null}
+                  </div>
+
+                  <div className="p-5 space-y-3">
+                    <div>
+                      <h3 className="text-lg font-bold text-slate-900 group-hover:text-footloose transition-colors">
+                        {event.name}
+                      </h3>
+
+                      <p className="mt-1 flex items-center gap-1.5 text-sm text-slate-600">
+                        <FiCalendar className="h-4 w-4 shrink-0" />
+                        {formatDate(event.date)}
+                      </p>
+                      {event.membersOnly && (
+                        <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-footloose/10 px-2.5 py-0.5 text-xs font-semibold text-footloose">
+                          <FiLock className="h-3 w-3" />
+                          Members only
+                        </span>
+                      )}
                     </div>
-                  )}
 
-                  {!event.requiresSubscription ? (
-                    <span className="absolute top-3 right-3 inline-flex items-center gap-1 rounded-full bg-emerald-50/95 px-3 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
-                      <FiUnlock className="h-3.5 w-3.5" />
-                      No signup needed
-                    </span>
-                  ) : event.isFull ? (
-                    <span className="absolute top-3 right-3 inline-flex items-center gap-1 rounded-full bg-slate-900/90 px-3 py-1 text-xs font-semibold text-white">
-                      Full
-                    </span>
-                  ) : null}
-                </div>
-
-                <div className="p-5 space-y-3">
-                  <div>
-                    <h3 className="text-lg font-bold text-slate-900 group-hover:text-footloose transition-colors">
-                      {event.name}
-                    </h3>
-
-                    <p className="mt-1 flex items-center gap-1.5 text-sm text-slate-600">
-                      <FiCalendar className="h-4 w-4 shrink-0" />
-                      {formatDate(event.date)}
+                    <p className="truncate text-sm text-slate-600">
+                      {getDescriptionPreview(event.description)}
                     </p>
-                    {event.membersOnly && (
-                      <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-footloose/10 px-2.5 py-0.5 text-xs font-semibold text-footloose">
-                        <FiLock className="h-3 w-3" />
-                        Members only
+
+                    <span className="text-sm font-semibold text-slate-800">
+                      {event.memberPrice != null
+                        ? `Members ${formatPrice(event.memberPrice)} · Others ${formatPrice(event.price)}`
+                        : formatPrice(event.price)}
+                    </span>
+
+                    {event.requiresSubscription && (
+                      <span className="flex items-center gap-1.5 text-sm text-slate-600">
+                        <FiUsers className="h-4 w-4" />
+                        {event.spotsTaken}
+                        {event.personLimit != null
+                          ? ` / ${event.personLimit}`
+                          : ""}
                       </span>
                     )}
                   </div>
+                </Link>
+              ))}
+            </div>
 
-                  <p className="truncate text-sm text-slate-600">
-                    {getDescriptionPreview(event.description)}
-                  </p>
-
-                  <span className="text-sm font-semibold text-slate-800">
-                    {event.memberPrice != null
-                      ? `Members ${formatPrice(event.memberPrice)} · Others ${formatPrice(event.price)}`
-                      : formatPrice(event.price)}
-                  </span>
-
-                  {event.requiresSubscription && (
-                    <span className="flex items-center gap-1.5 text-sm text-slate-600">
-                      <FiUsers className="h-4 w-4" />
-                      {event.spotsTaken}
-                      {event.personLimit != null
-                        ? ` / ${event.personLimit}`
-                        : ""}
-                    </span>
-                  )}
-                </div>
-              </Link>
-            ))}
-          </div>
+            {previewOnly && allEvents.length > events.length && (
+              <div className="flex justify-center">
+                <Link
+                  href="/events"
+                  className="group inline-flex items-center gap-2 text-sm font-semibold text-footloose"
+                >
+                  View all events
+                  <FiArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                </Link>
+              </div>
+            )}
+          </>
         )}
       </div>
     </Container>
