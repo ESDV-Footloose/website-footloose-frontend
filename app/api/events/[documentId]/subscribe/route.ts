@@ -7,6 +7,13 @@ const STRAPI_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL?.replace(
   "",
 );
 
+/**
+ * Subscribes the authenticated user to the event.
+ *
+ * @param _request The incoming HTTP request.
+ * @param params Route parameters including the event's Strapi document ID.
+ * @returns The response from Strapi's subscription endpoint, or 401 if the user is not authenticated.
+ */
 export async function POST(
   _request: Request,
   { params }: { params: Promise<{ documentId: string }> },
