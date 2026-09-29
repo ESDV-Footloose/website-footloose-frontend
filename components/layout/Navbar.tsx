@@ -171,6 +171,7 @@ const ALWAYS_SOLID_ROUTES = [
   "/login",
   "/register",
   "/forgot-password",
+  "/reset-password",
   "/membership",
   "/membership/course-subscription",
 ];
