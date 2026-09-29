@@ -1,7 +1,14 @@
 import type { Metadata } from "next";
 import { getServerSession } from "next-auth/next";
 import { notFound } from "next/navigation";
-import { FiUsers, FiUnlock, FiMapPin, FiClock, FiLock } from "react-icons/fi";
+import {
+  FiUsers,
+  FiUnlock,
+  FiMapPin,
+  FiClock,
+  FiLock,
+  FiCalendar,
+} from "react-icons/fi";
 
 import { authOptions } from "@/services/auth";
 import { getPageBanner } from "@/services/strapi";
@@ -59,6 +66,7 @@ export default async function EventDetailPage({
 }) {
   const { slug } = await params;
   const session = await getServerSession(authOptions);
+  const isLoggedIn = Boolean(session?.jwt);
 
   const [event, eventsBanner] = await Promise.all([
     getEvent(slug, session?.jwt),
@@ -90,13 +98,21 @@ export default async function EventDetailPage({
           {/* Right: narrow sticky details sidebar */}
           <div className="lg:sticky lg:top-24 space-y-4">
             <div className="rounded-3xl bg-white p-5 shadow-xl shadow-slate-200/50 border border-slate-100 space-y-4">
+              {event.date && (
+                <div className="flex items-start gap-3">
+                  <FiCalendar className="mt-0.5 h-4 w-4 shrink-0 text-footloose" />
+                  <div>
+                    <p className="text-sm font-semibold text-slate-800">
+                      {formatDateTime(event.date)}
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {event.location && (
                 <div className="flex items-start gap-3">
                   <FiMapPin className="mt-0.5 h-4 w-4 shrink-0 text-footloose" />
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                      Location
-                    </p>
                     <p className="text-sm font-semibold text-slate-800">
                       {event.location}
                     </p>
@@ -109,9 +125,6 @@ export default async function EventDetailPage({
                   €
                 </span>
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                    Price
-                  </p>
                   {event.memberPrice != null ? (
                     <div className="text-sm font-semibold text-slate-800">
                       <p>Members: {formatPrice(event.memberPrice)}</p>
@@ -138,41 +151,60 @@ export default async function EventDetailPage({
                 <>
                   <div className="flex items-start gap-3">
                     <FiUsers className="mt-0.5 h-4 w-4 shrink-0 text-footloose" />
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                        Places taken
-                      </p>
+
+                    {isLoggedIn ? (
+                      <details className="group">
+                        <summary className="flex cursor-pointer list-none items-center gap-1">
+                          <p className="text-sm font-semibold text-slate-800">
+                            {event.spotsTaken}
+                            {event.personLimit != null
+                              ? ` / ${event.personLimit}`
+                              : " (no limit)"}
+                            {" places taken"}
+                          </p>
+
+                          <svg
+                            className="h-4 w-4 shrink-0 text-footloose transition-transform group-open:rotate-180"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                            aria-hidden="true"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.51a.75.75 0 01-1.08 1.04l-4.25-4.51a.75.75 0 01.02-1.06z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </summary>
+
+                        <div className="mt-2">
+                          {event.attendeeNames?.length === 0 ? (
+                            <p className="text-sm text-slate-600">
+                              No one has subscribed yet.
+                            </p>
+                          ) : (
+                            <ul className="space-y-1 text-sm text-slate-800">
+                              {event.attendeeNames?.map(
+                                (attendeeName: string, index: number) => (
+                                  <li key={`${attendeeName}-${index}`}>
+                                    {attendeeName}
+                                  </li>
+                                ),
+                              )}
+                            </ul>
+                          )}
+                        </div>
+                      </details>
+                    ) : (
                       <p className="text-sm font-semibold text-slate-800">
                         {event.spotsTaken}
                         {event.personLimit != null
                           ? ` / ${event.personLimit}`
                           : " (no limit)"}
+                        {" places taken"}
                       </p>
-                    </div>
+                    )}
                   </div>
-
-                  {event.attendeeNames && (
-                    <details className="rounded-2xl bg-slate-50/70 border border-slate-200 px-3 py-2">
-                      <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wider text-slate-500">
-                        Who is coming
-                      </summary>
-                      {event.attendeeNames.length === 0 ? (
-                        <p className="mt-2 text-sm text-slate-600">
-                          No one has subscribed yet.
-                        </p>
-                      ) : (
-                        <ul className="mt-2 space-y-1 text-sm text-slate-800">
-                          {event.attendeeNames.map(
-                            (attendeeName: string, index: number) => (
-                              <li key={`${attendeeName}-${index}`}>
-                                {attendeeName}
-                              </li>
-                            ),
-                          )}
-                        </ul>
-                      )}
-                    </details>
-                  )}
 
                   {(event.registrationDeadline ||
                     event.deregistrationDeadline) && (
@@ -181,20 +213,16 @@ export default async function EventDetailPage({
                       <div className="space-y-1.5">
                         {event.registrationDeadline && (
                           <div>
-                            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                              Register until
-                            </p>
                             <p className="text-sm font-semibold text-slate-800">
+                              Registration deadline:{" "}
                               {formatDateTime(event.registrationDeadline)}
                             </p>
                           </div>
                         )}
                         {event.deregistrationDeadline && (
                           <div>
-                            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                              Unsubscribe until
-                            </p>
                             <p className="text-sm font-semibold text-slate-800">
+                              Cancellation deadline:{" "}
                               {formatDateTime(event.deregistrationDeadline)}
                             </p>
                           </div>
@@ -223,7 +251,7 @@ export default async function EventDetailPage({
                   isSubscribed={event.isSubscribed}
                   isFull={event.isFull}
                   isPast={event.isPast}
-                  isLoggedIn={Boolean(session?.jwt)}
+                  isLoggedIn={isLoggedIn}
                   isMember={event.isMember}
                   membersOnly={event.membersOnly}
                   isRegistrationClosed={event.isRegistrationClosed}
