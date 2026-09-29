@@ -24,9 +24,19 @@ const STRAPI_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL?.replace(
 
 const EVENTS_PAGE_SLUG = "events";
 
+/** Formats an event price for display.
+ *
+ * @param price The price in euros.
+ * @returns The formatted euro price, or "Free" when the price is zero.
+ */
 const formatPrice = (price: number) =>
   price > 0 ? `€${price.toFixed(2)}` : "Free";
 
+/** Formats an ISO date string using Amsterdam time zone.
+ *
+ * @param date The date string to format.
+ * @returns A human-readable date and time.
+ */
 const formatDateTime = (date: string) =>
   new Intl.DateTimeFormat("en-GB", {
     year: "numeric",
@@ -37,6 +47,13 @@ const formatDateTime = (date: string) =>
     timeZone: "Europe/Amsterdam",
   }).format(new Date(date));
 
+/**
+ * Retrieves an event by its slug from Strapi.
+ *
+ * @param slug The event slug.
+ * @param jwt Authenticated user's Strapi JWT. Used for subscription status.
+ * @returns The event data, or null if the request fails.
+ */
 async function getEvent(slug: string, jwt?: string) {
   const res = await fetch(`${STRAPI_API_URL}/api/events/slug/${slug}`, {
     headers: jwt ? { Authorization: `Bearer ${jwt}` } : {},
@@ -47,6 +64,11 @@ async function getEvent(slug: string, jwt?: string) {
   return data.data;
 }
 
+/** Generates metadata for the event detail page based on the event name.
+ *
+ * @param params Route parameters containing the event slug.
+ * @returns Page metadata with the event name, or a default title as fallback.
+ */
 export async function generateMetadata({
   params,
 }: {
@@ -59,6 +81,14 @@ export async function generateMetadata({
   };
 }
 
+/**
+ * Renders the detail page for an event.
+ * Displays event description, date, location, price, subscription info,
+ * deadlines, optional attendees list, and subscription action.
+ *
+ * @param params Route parameters containing the event slug.
+ * @returns The event detail page, or 404 if the event does not exist.
+ */
 export default async function EventDetailPage({
   params,
 }: {
@@ -84,7 +114,7 @@ export default async function EventDetailPage({
 
       <Container>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-          {/* Left: event content */}
+          {/* Left: event title and description */}
           <div className="lg:col-span-2">
             <h2 className="text-3xl font-bold tracking-tight text-slate-900">
               {event.name}
@@ -95,9 +125,10 @@ export default async function EventDetailPage({
             </div>
           </div>
 
-          {/* Right: narrow sticky details sidebar */}
+          {/* Right: event details sidebar */}
           <div className="lg:sticky lg:top-24 space-y-4">
             <div className="rounded-3xl bg-white p-5 shadow-xl shadow-slate-200/50 border border-slate-100 space-y-4">
+              {/** Event date */}
               {event.date && (
                 <div className="flex items-start gap-3">
                   <FiCalendar className="mt-0.5 h-4 w-4 shrink-0 text-footloose" />
@@ -109,6 +140,7 @@ export default async function EventDetailPage({
                 </div>
               )}
 
+              {/** Event location */}
               {event.location && (
                 <div className="flex items-start gap-3">
                   <FiMapPin className="mt-0.5 h-4 w-4 shrink-0 text-footloose" />
@@ -120,6 +152,7 @@ export default async function EventDetailPage({
                 </div>
               )}
 
+              {/** Event price */}
               <div className="flex items-start gap-3">
                 <span className="mt-0.5 shrink-0 text-footloose text-sm font-bold w-4 text-center">
                   €
@@ -138,6 +171,7 @@ export default async function EventDetailPage({
                 </div>
               </div>
 
+              {/** Members-only or open to all */}
               {event.requiresSubscription && event.membersOnly && (
                 <div className="flex items-start gap-3">
                   <FiLock className="mt-0.5 h-4 w-4 shrink-0 text-footloose" />
@@ -147,6 +181,7 @@ export default async function EventDetailPage({
                 </div>
               )}
 
+              {/** Spots taken + attendees list if authenticated */}
               {event.requiresSubscription ? (
                 <>
                   <div className="flex items-start gap-3">
@@ -206,6 +241,7 @@ export default async function EventDetailPage({
                     )}
                   </div>
 
+                  {/** Registration and deregistration deadline */}
                   {(event.registrationDeadline ||
                     event.deregistrationDeadline) && (
                     <div className="flex items-start gap-3">

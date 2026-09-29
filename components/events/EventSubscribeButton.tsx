@@ -9,6 +9,16 @@ import Button from "@/components/modules/Button";
 
 type ApiResponse = { error?: { message?: string } };
 
+/**
+ * Renders the subscription controls for an event via the button.
+ * - Subscribe/unsubscribe action
+ * - Registration is closed
+ * - Deregistration is closed
+ * - Event is full
+ *
+ * @param props Event and user state used to determine the available action.
+ * @returns The appropriate button for the current user and event.
+ */
 export default function EventSubscribeButton({
   documentId,
   isSubscribed,
@@ -21,14 +31,23 @@ export default function EventSubscribeButton({
   isDeregistrationClosed,
   price,
 }: {
+  /** Unique document ID of the event. */
   documentId: string;
+  /** If the currently authenticated user is subscribed to the event. */
   isSubscribed: boolean;
+  /** If the event is full. */
   isFull: boolean;
+  /** If the event is in the past. */
   isPast: boolean;
+  /** If the current user is authenticated. */
   isLoggedIn: boolean;
+  /** If the current user is authenticated and approved. */
   isMember: boolean;
+  /** If the event is a members-only event. */
   membersOnly: boolean;
+  /** If the registration deadline has passed. */
   isRegistrationClosed: boolean;
+  /** If the deregistration deadline has pasesd. */
   isDeregistrationClosed: boolean;
   /** The price applicable to the current user. */
   price: number;
@@ -38,6 +57,7 @@ export default function EventSubscribeButton({
   const [error, setError] = useState<string | null>(null);
   const [paymentConfirmed, setPaymentConfirmed] = useState(false);
 
+  /** The event is in the past. */
   if (isPast) {
     return (
       <p className="text-sm font-semibold text-slate-500">
@@ -46,6 +66,7 @@ export default function EventSubscribeButton({
     );
   }
 
+  /** The user is not logged in. */
   if (!isLoggedIn) {
     return (
       <div className="space-y-2">
@@ -67,6 +88,7 @@ export default function EventSubscribeButton({
     );
   }
 
+  /** The user is subscribed, but the deregistration deadline has passed. */
   if (isSubscribed && isDeregistrationClosed) {
     return (
       <p className="text-sm font-semibold text-slate-700">
@@ -76,6 +98,7 @@ export default function EventSubscribeButton({
     );
   }
 
+  /** The user is not a member and wants to subscribe to a members-only event. */
   if (!isSubscribed && membersOnly && !isMember) {
     return (
       <p className="text-sm font-semibold text-slate-700">
@@ -85,6 +108,7 @@ export default function EventSubscribeButton({
     );
   }
 
+  /** The user is not subscribed, but the registration deadline has passed.  */
   if (!isSubscribed && isRegistrationClosed) {
     return (
       <p className="text-sm font-semibold text-slate-500">
@@ -93,6 +117,9 @@ export default function EventSubscribeButton({
     );
   }
 
+  /**
+   * Subscribes or unsubscribes the current user from the event.   *
+   */
   async function toggle() {
     setSubmitting(true);
     setError(null);

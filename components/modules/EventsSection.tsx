@@ -22,34 +22,58 @@ type RichTextChild = {
   type?: string;
 };
 
+/** Representation of a rich text block. */
 type RichTextBlock = {
   children?: RichTextChild[];
 };
 
+/** Representation of one event in the event overview */
 type EventListItem = {
+  /** Unique document ID of the event. */
   documentId: string;
+  /** The event's name. */
   name: string;
+  /** The event's website slug. */
   slug: string;
+  /** The event's date. */
   date: string;
+  /** The optional event image + alt text. */
   image: {
     url: string;
     alternativeText: string | null;
   } | null;
+  /** The description of the event. */
   description: RichTextBlock[];
+  /** The general price of the event. */
   price: number;
+  /** The member price of the event. If not defined, the member price is the general price. */
   memberPrice: number | null;
+  /** Whether the event is for members only or open for all. */
   membersOnly: boolean;
+  /** Whether the event requires a user to subscribe. */
   requiresSubscription: boolean;
+  /** The maximum number of subscriptions. */
   personLimit: number | null;
+  /** How many users have subscribed for the event. */
   spotsTaken: number;
+  /** Whether there are no free spots for the event. */
   isFull: boolean;
 };
 
+/**
+ * Formats an event price for display.
+ *
+ * @param price The price in euros.
+ * @returns The formatted euro price, or "Free" when the price is zero.
+ */
 const formatPrice = (price: number) =>
   price > 0 ? `€${price.toFixed(2)}` : "Free";
 
 /**
  * Extracts a plain-text preview from Strapi rich text (blocks) content.
+ *
+ * @param blocks The rich-text blocks returned by Strapi.
+ * @returns A trimmed plain-text representation of the content.
  */
 function getDescriptionPreview(blocks: RichTextBlock[]): string {
   return blocks
@@ -60,6 +84,12 @@ function getDescriptionPreview(blocks: RichTextBlock[]): string {
     .trim();
 }
 
+/**
+ * Retrieves upcoming events from Strapi.
+ *
+ * @param jwt Optional authenticated user's Strapi JWT.
+ * @returns A list of upcoming events, or an empty array if the request fails.
+ */
 async function getUpcomingEvents(jwt?: string): Promise<EventListItem[]> {
   const res = await fetch(`${STRAPI_API_URL}/api/events/list`, {
     headers: jwt ? { Authorization: `Bearer ${jwt}` } : {},
@@ -73,6 +103,12 @@ async function getUpcomingEvents(jwt?: string): Promise<EventListItem[]> {
   return data.data ?? [];
 }
 
+/**
+ * Formats an event date and time for display.
+ *
+ * @param dateString ISO date string representing the event date.
+ * @returns A human-readable date and time.
+ */
 function formatDate(dateString: string) {
   return new Intl.DateTimeFormat("en-UK", {
     weekday: "short",
@@ -84,6 +120,15 @@ function formatDate(dateString: string) {
   }).format(new Date(dateString));
 }
 
+/**
+ * Renders a list of upcoming events.
+ * When previewOnly = true, only the first three events are shown.
+ *
+ * @param props Section configuration
+ * @param props.heading Optional heading displayed above the event
+ * @param props.previewOnly Whether to show only the first three events or all events.
+ * @returns The events section containing event cards or an empty-state message.
+ */
 export default async function EventsSection({
   heading,
   previewOnly,
