@@ -170,6 +170,7 @@ export type MobileMenuLinkProps = {
 const ALWAYS_SOLID_ROUTES = [
   "/login",
   "/register",
+  "/forgot-password",
   "/membership",
   "/membership/course-subscription",
 ];

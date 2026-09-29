@@ -2,23 +2,18 @@
 
 import Link from "next/link";
 import React, { useState } from "react";
-import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import { FiUser } from "react-icons/fi";
 
 import Button from "@/components/modules/Button";
 
 /**
- * Login form for Strapi users.
+ * Forgot password form for Strapi users.
  *
- * @param loginFormProps Properties passed to the login form component.
- * @returns The login form component.
+ * @returns The forgot password form component.
  */
-export default function LoginForm() {
-  const router = useRouter();
-
+export default function ForgotPasswordForm() {
   const [identifier, setIdentifier] = useState("");
-  const [password, setPassword] = useState("");
+  const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -28,20 +23,20 @@ export default function LoginForm() {
     setError("");
     setIsSubmitting(true);
 
-    const result = await signIn("credentials", {
-      identifier,
-      password,
-      redirect: false,
+    const response = await fetch("/api/forgot-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: identifier }),
     });
 
     setIsSubmitting(false);
 
-    if (result?.error) {
-      setError("Invalid email or password.");
+    if (!response.ok) {
+      setError("Something went wrong. Please try again.");
       return;
     }
 
-    router.refresh();
+    setSent(true);
   }
 
   return (
@@ -51,10 +46,10 @@ export default function LoginForm() {
           <FiUser size={28} />
         </div>
 
-        <h1 className="text-3xl font-bold">Member login</h1>
+        <h1 className="text-3xl font-bold">Reset password</h1>
 
         <p className="mt-2 text-sm text-neutral-600">
-          Log in with your Footloose account to access your membership page.
+          Reset the password to your Footloose account.
         </p>
       </div>
 
@@ -71,28 +66,34 @@ export default function LoginForm() {
         />
       </label>
 
-      <label className="flex flex-col gap-2">
-        <span className="text-sm font-semibold">Password</span>
-        <input
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-          type="password"
-          required
-          autoComplete="current-password"
-          className="rounded-md border border-black/20 px-4 py-3 outline-none transition-colors focus:border-footloose"
-          placeholder="••••••••"
-        />
-      </label>
-
       {error && (
         <p className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
           {error}
         </p>
       )}
 
+      {sent && (
+        <p className="rounded-md bg-green-50 px-4 py-3 text-sm text-green-700">
+          If an account with that email exists, a password reset email has been
+          sent.
+        </p>
+      )}
+
       <Button type="submit" disabled={isSubmitting} className="justify-center">
-        {isSubmitting ? "Signing in..." : "Sign in"}
+        {isSubmitting ? "Sending password reset email..." : "Reset password"}
       </Button>
+
+      <p className="text-center text-sm text-neutral-600">
+        Remember your password?{" "}
+        <Link
+          href="/login"
+          className="font-semibold text-footloose hover:underline"
+        >
+          Login
+        </Link>
+      </p>
+
+      <hr className="border-t border-neutral-200" />
 
       <p className="text-center text-sm text-neutral-600">
         Don&apos;t have an account?{" "}
@@ -101,18 +102,6 @@ export default function LoginForm() {
           className="font-semibold text-footloose hover:underline"
         >
           Register
-        </Link>
-      </p>
-
-      <hr className="border-t border-neutral-200 text-neutral-600" />
-
-      <p className="text-center text-sm">
-        Forgot login?{" "}
-        <Link
-          href="/forgot-password"
-          className="font-semibold text-footloose hover:underline"
-        >
-          Reset password
         </Link>
       </p>
     </form>
