@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getServerSession } from "next-auth/next";
 import { notFound } from "next/navigation";
-import { FiUsers, FiUnlock, FiMapPin } from "react-icons/fi";
+import { FiUsers, FiUnlock, FiMapPin, FiClock, FiLock } from "react-icons/fi";
 
 import { authOptions } from "@/services/auth";
 import { getPageBanner } from "@/services/strapi";
@@ -16,6 +16,19 @@ const STRAPI_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL?.replace(
 );
 
 const EVENTS_PAGE_SLUG = "events";
+
+const formatPrice = (price: number) =>
+  price > 0 ? `€${price.toFixed(2)}` : "Free";
+
+const formatDateTime = (date: string) =>
+  new Intl.DateTimeFormat("en-GB", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Europe/Amsterdam",
+  }).format(new Date(date));
 
 async function getEvent(slug: string, jwt?: string) {
   const res = await fetch(`${STRAPI_API_URL}/api/events/slug/${slug}`, {
@@ -99,27 +112,97 @@ export default async function EventDetailPage({
                   <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
                     Price
                   </p>
-                  <p className="text-sm font-semibold text-slate-800">
-                    {event.price > 0 ? `€${event.price.toFixed(2)}` : "Free"}
-                  </p>
+                  {event.memberPrice != null ? (
+                    <div className="text-sm font-semibold text-slate-800">
+                      <p>Members: {formatPrice(event.memberPrice)}</p>
+                      <p>Non-members: {formatPrice(event.price)}</p>
+                    </div>
+                  ) : (
+                    <p className="text-sm font-semibold text-slate-800">
+                      {formatPrice(event.price)}
+                    </p>
+                  )}
                 </div>
               </div>
 
-              {event.requiresSubscription ? (
+              {event.requiresSubscription && event.membersOnly && (
                 <div className="flex items-start gap-3">
-                  <FiUsers className="mt-0.5 h-4 w-4 shrink-0 text-footloose" />
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                      Places taken
-                    </p>
-                    <p className="text-sm font-semibold text-slate-800">
-                      {event.spotsTaken}
-                      {event.personLimit != null
-                        ? ` / ${event.personLimit}`
-                        : " (no limit)"}
-                    </p>
-                  </div>
+                  <FiLock className="mt-0.5 h-4 w-4 shrink-0 text-footloose" />
+                  <p className="text-sm font-semibold text-slate-800">
+                    Members only
+                  </p>
                 </div>
+              )}
+
+              {event.requiresSubscription ? (
+                <>
+                  <div className="flex items-start gap-3">
+                    <FiUsers className="mt-0.5 h-4 w-4 shrink-0 text-footloose" />
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                        Places taken
+                      </p>
+                      <p className="text-sm font-semibold text-slate-800">
+                        {event.spotsTaken}
+                        {event.personLimit != null
+                          ? ` / ${event.personLimit}`
+                          : " (no limit)"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {event.attendeeNames && (
+                    <details className="rounded-2xl bg-slate-50/70 border border-slate-200 px-3 py-2">
+                      <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wider text-slate-500">
+                        Who is coming
+                      </summary>
+                      {event.attendeeNames.length === 0 ? (
+                        <p className="mt-2 text-sm text-slate-600">
+                          No one has subscribed yet.
+                        </p>
+                      ) : (
+                        <ul className="mt-2 space-y-1 text-sm text-slate-800">
+                          {event.attendeeNames.map(
+                            (attendeeName: string, index: number) => (
+                              <li key={`${attendeeName}-${index}`}>
+                                {attendeeName}
+                              </li>
+                            ),
+                          )}
+                        </ul>
+                      )}
+                    </details>
+                  )}
+
+                  {(event.registrationDeadline ||
+                    event.deregistrationDeadline) && (
+                    <div className="flex items-start gap-3">
+                      <FiClock className="mt-0.5 h-4 w-4 shrink-0 text-footloose" />
+                      <div className="space-y-1.5">
+                        {event.registrationDeadline && (
+                          <div>
+                            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                              Register until
+                            </p>
+                            <p className="text-sm font-semibold text-slate-800">
+                              {formatDateTime(event.registrationDeadline)}
+                            </p>
+                          </div>
+                        )}
+                        {event.deregistrationDeadline && (
+                          <div>
+                            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                              Unsubscribe until
+                            </p>
+                            <p className="text-sm font-semibold text-slate-800">
+                              {formatDateTime(event.deregistrationDeadline)}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className="flex items-start gap-3">
                   <FiUnlock className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
@@ -141,7 +224,11 @@ export default async function EventDetailPage({
                   isFull={event.isFull}
                   isPast={event.isPast}
                   isLoggedIn={Boolean(session?.jwt)}
-                  price={event.price}
+                  isMember={event.isMember}
+                  membersOnly={event.membersOnly}
+                  isRegistrationClosed={event.isRegistrationClosed}
+                  isDeregistrationClosed={event.isDeregistrationClosed}
+                  price={event.applicablePrice}
                 />
               )}
             </div>
