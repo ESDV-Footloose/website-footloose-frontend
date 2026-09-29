@@ -104,9 +104,9 @@ export default function LoginForm() {
         </Link>
       </p>
 
-      <hr className="border-t border-neutral-200 text-neutral-600" />
+      <hr className="border-t border-neutral-200" />
 
-      <p className="text-center text-sm">
+      <p className="text-center text-sm text-neutral-600">
         Forgot login?{" "}
         <Link
           href="/forgot-password"
