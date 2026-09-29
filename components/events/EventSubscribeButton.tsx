@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { FiCheck, FiX } from "react-icons/fi";
+import { FiCheck, FiX, FiLock } from "react-icons/fi";
 
 import Button from "@/components/modules/Button";
 
@@ -47,25 +47,22 @@ export default function EventSubscribeButton({
   }
 
   if (!isLoggedIn) {
-    if (isRegistrationClosed) {
-      return (
-        <p className="text-sm font-semibold text-slate-500">
-          Registration for this event is closed.
-        </p>
-      );
-    }
-
     return (
-      <div className="space-y-3">
-        <p className="text-sm text-slate-700">
-          You need to log in in order to subscribe to this event.
-        </p>
-        <Link
-          href="/login"
-          className="inline-flex items-center justify-center rounded-md border border-footloose px-4 py-2 text-white bg-footloose hover:bg-white hover:border-footloose hover:text-footloose transition-colors duration-300 hover:cursor-pointer"
+      <div className="space-y-2">
+        <Button
+          type="button"
+          disabled
+          className="bg-slate-200 border-slate-200 text-slate-500 hover:bg-slate-200 hover:border-slate-200 hover:text-slate-500"
         >
+          <FiLock className="h-5 w-5" />
           Log in to subscribe
-        </Link>
+        </Button>
+        <p className="text-xs text-slate-500">
+          <Link href="/login" className="font-semibold text-footloose">
+            Log in
+          </Link>{" "}
+          to subscribe to this event.
+        </p>
       </div>
     );
   }
@@ -79,26 +76,20 @@ export default function EventSubscribeButton({
     );
   }
 
+  if (!isSubscribed && membersOnly && !isMember) {
+    return (
+      <p className="text-sm font-semibold text-slate-700">
+        This event is for members only. Your membership has not been approved
+        yet.
+      </p>
+    );
+  }
+
   if (!isSubscribed && isRegistrationClosed) {
     return (
       <p className="text-sm font-semibold text-slate-500">
         Registration for this event is closed.
       </p>
-    );
-  }
-
-  if (!isSubscribed && membersOnly && !isMember) {
-    return isLoggedIn ? (
-      <p className="text-sm font-semibold text-slate-700">
-        This event is for members only. Your membership has not been approved
-        yet.
-      </p>
-    ) : (
-      <div className="space-y-3">
-        <p className="text-sm text-slate-700">
-          This event is for members only. Log in to subscribe.
-        </p>
-      </div>
     );
   }
 
@@ -112,10 +103,10 @@ export default function EventSubscribeButton({
         { method: "POST" },
       );
 
-      const data = await res.json();
+      const data: ApiResponse = await res.json();
 
       if (!res.ok) {
-        throw new Error(data?.error?.message ?? "Something went wrong.");
+        throw new Error(data.error?.message ?? "Something went wrong.");
       }
 
       router.refresh();
@@ -155,7 +146,9 @@ export default function EventSubscribeButton({
         className={
           isSubscribed
             ? "bg-slate-700 border-slate-700 hover:bg-white hover:border-slate-700 hover:text-slate-700"
-            : ""
+            : isFull
+              ? "bg-slate-200 border-slate-200 text-slate-500 hover:bg-slate-200 hover:border-slate-200 hover:text-slate-500"
+              : ""
         }
       >
         {isSubscribed ? (
