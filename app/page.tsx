@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import BigBanner from "@/components/modules/BigBanner";
 import RichText from "@/components/modules/RichText";
 import SmallBanner from "@/components/modules/SmallBanner";
+import EventsSection from "@/components/modules/EventsSection";
 import { getHomepage, type StrapiHomepageSection } from "@/services/strapi";
 /**
  * Metadata for the homepage.
@@ -26,6 +27,14 @@ function renderSection(section: StrapiHomepageSection, index: number) {
       return <RichText key={index} content={section.content} />;
     case "page.banner":
       return <SmallBanner key={index} {...section} />;
+    case "page.events-section":
+      return (
+        <EventsSection
+          key={index}
+          heading={section.heading}
+          previewOnly={section.previewOnly}
+        />
+      );
     case "page.big-banner":
       return (
         <BigBanner

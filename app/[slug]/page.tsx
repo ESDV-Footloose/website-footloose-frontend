@@ -20,7 +20,13 @@ function renderSection(section: StrapiPageSection, index: number) {
     case "page.banner":
       return <SmallBanner key={index} {...section} />;
     case "page.events-section":
-      return <EventsSection key={index} heading={section.heading} />;
+      return (
+        <EventsSection
+          key={index}
+          heading={section.heading}
+          previewOnly={section.previewOnly}
+        />
+      );
     default:
       return null;
   }

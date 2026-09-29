@@ -102,6 +102,10 @@ export type StrapiEventsSection = {
    * Optional heading displayed above the events grid.
    */
   heading?: string;
+  /**
+   * Whether to limit the events grid to a preview.
+   */
+  previewOnly?: boolean;
 };
 
 /**
