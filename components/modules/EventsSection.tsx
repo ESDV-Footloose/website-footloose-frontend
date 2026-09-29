@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { FiCalendar, FiUsers, FiUnlock } from "react-icons/fi";
+import { FiCalendar, FiUsers, FiUnlock, FiLock } from "react-icons/fi";
 
 import Container from "@/components/containers/Container";
 
@@ -29,11 +29,16 @@ type EventListItem = {
   } | null;
   description: RichTextBlock[];
   price: number;
+  memberPrice: number | null;
+  membersOnly: boolean;
   requiresSubscription: boolean;
   personLimit: number | null;
   spotsTaken: number;
   isFull: boolean;
 };
+
+const formatPrice = (price: number) =>
+  price > 0 ? `€${price.toFixed(2)}` : "Free";
 
 /**
  * Extracts a plain-text preview from Strapi rich text (blocks) content.
@@ -133,27 +138,33 @@ export default async function EventsSection({ heading }: { heading?: string }) {
                       <FiCalendar className="h-4 w-4 shrink-0" />
                       {formatDate(event.date)}
                     </p>
+                    {event.membersOnly && (
+                      <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-footloose/10 px-2.5 py-0.5 text-xs font-semibold text-footloose">
+                        <FiLock className="h-3 w-3" />
+                        Members only
+                      </span>
+                    )}
                   </div>
 
                   <p className="truncate text-sm text-slate-600">
                     {getDescriptionPreview(event.description)}
                   </p>
 
-                  <div className="flex items-center justify-between pt-2 border-t border-slate-100">
-                    <span className="text-sm font-semibold text-slate-800">
-                      {event.price > 0 ? `€${event.price.toFixed(2)}` : "Free"}
-                    </span>
+                  <span className="text-sm font-semibold text-slate-800">
+                    {event.memberPrice != null
+                      ? `Members ${formatPrice(event.memberPrice)} · Others ${formatPrice(event.price)}`
+                      : formatPrice(event.price)}
+                  </span>
 
-                    {event.requiresSubscription && (
-                      <span className="flex items-center gap-1.5 text-sm text-slate-600">
-                        <FiUsers className="h-4 w-4" />
-                        {event.spotsTaken}
-                        {event.personLimit != null
-                          ? ` / ${event.personLimit}`
-                          : ""}
-                      </span>
-                    )}
-                  </div>
+                  {event.requiresSubscription && (
+                    <span className="flex items-center gap-1.5 text-sm text-slate-600">
+                      <FiUsers className="h-4 w-4" />
+                      {event.spotsTaken}
+                      {event.personLimit != null
+                        ? ` / ${event.personLimit}`
+                        : ""}
+                    </span>
+                  )}
                 </div>
               </Link>
             ))}
