@@ -7,12 +7,18 @@ import { FiCheck, FiX } from "react-icons/fi";
 
 import Button from "@/components/modules/Button";
 
+type ApiResponse = { error?: { message?: string } };
+
 export default function EventSubscribeButton({
   documentId,
   isSubscribed,
   isFull,
   isPast,
   isLoggedIn,
+  isMember,
+  membersOnly,
+  isRegistrationClosed,
+  isDeregistrationClosed,
   price,
 }: {
   documentId: string;
@@ -20,6 +26,11 @@ export default function EventSubscribeButton({
   isFull: boolean;
   isPast: boolean;
   isLoggedIn: boolean;
+  isMember: boolean;
+  membersOnly: boolean;
+  isRegistrationClosed: boolean;
+  isDeregistrationClosed: boolean;
+  /** The price applicable to the current user. */
   price: number;
 }) {
   const router = useRouter();
@@ -36,13 +47,58 @@ export default function EventSubscribeButton({
   }
 
   if (!isLoggedIn) {
+    if (isRegistrationClosed) {
+      return (
+        <p className="text-sm font-semibold text-slate-500">
+          Registration for this event is closed.
+        </p>
+      );
+    }
+
     return (
-      <Link
-        href="/login"
-        className="inline-flex items-center justify-center rounded-md border border-footloose px-4 py-2 text-white bg-footloose hover:bg-white hover:border-footloose hover:text-footloose transition-colors duration-300 hover:cursor-pointer"
-      >
-        Log in to subscribe
-      </Link>
+      <div className="space-y-3">
+        <p className="text-sm text-slate-700">
+          You need to log in in order to subscribe to this event.
+        </p>
+        <Link
+          href="/login"
+          className="inline-flex items-center justify-center rounded-md border border-footloose px-4 py-2 text-white bg-footloose hover:bg-white hover:border-footloose hover:text-footloose transition-colors duration-300 hover:cursor-pointer"
+        >
+          Log in to subscribe
+        </Link>
+      </div>
+    );
+  }
+
+  if (isSubscribed && isDeregistrationClosed) {
+    return (
+      <p className="text-sm font-semibold text-slate-700">
+        You are subscribed. The deregistration deadline has passed, so you can
+        no longer unsubscribe.
+      </p>
+    );
+  }
+
+  if (!isSubscribed && isRegistrationClosed) {
+    return (
+      <p className="text-sm font-semibold text-slate-500">
+        Registration for this event is closed.
+      </p>
+    );
+  }
+
+  if (!isSubscribed && membersOnly && !isMember) {
+    return isLoggedIn ? (
+      <p className="text-sm font-semibold text-slate-700">
+        This event is for members only. Your membership has not been approved
+        yet.
+      </p>
+    ) : (
+      <div className="space-y-3">
+        <p className="text-sm text-slate-700">
+          This event is for members only. Log in to subscribe.
+        </p>
+      </div>
     );
   }
 
