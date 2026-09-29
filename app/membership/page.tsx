@@ -260,11 +260,11 @@ export default async function MembershipPage() {
   );
 
   const quickLinks = [
+    { label: "My Events", href: "#my-events" },
     { label: "Personal Details", href: "#personal-details" },
     { label: "Institution Details", href: "#institution-details" },
     { label: "Membership Status", href: "#membership-status" },
     { label: "Course Subscriptions", href: "#course-subscriptions" },
-    { label: "My Events", href: "#my-events" },
   ];
 
   return (
@@ -329,6 +329,42 @@ export default async function MembershipPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
           <div className="lg:col-span-2 space-y-6">
+            <SectionCard id="my-events" title="My Events" icon={<FiCalendar />}>
+              {myEvents.length === 0 ? (
+                <p className="sm:col-span-2 text-sm text-slate-600">
+                  You&apos;re not subscribed to any upcoming events.
+                </p>
+              ) : (
+                myEvents.map((event) => (
+                  <Link
+                    key={event.documentId}
+                    href={`/events/${event.slug}`}
+                    className="p-4 rounded-2xl bg-slate-50/70 border border-slate-200 transition-colors hover:border-footloose"
+                  >
+                    <p className="text-sm font-semibold text-slate-900 truncate">
+                      {event.name}
+                    </p>
+                    <p className="mt-1 flex items-center gap-1.5 text-xs text-slate-600">
+                      <FiCalendar className="h-3.5 w-3.5 shrink-0" />
+                      {new Intl.DateTimeFormat("en-GB", {
+                        weekday: "short",
+                        day: "numeric",
+                        month: "long",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        timeZone: "Europe/Amsterdam",
+                      }).format(new Date(event.date))}
+                    </p>
+                    {event.location && (
+                      <p className="mt-1 flex items-center gap-1.5 text-xs text-slate-600">
+                        <FiMapPin className="h-3.5 w-3.5 shrink-0" />
+                        {event.location}
+                      </p>
+                    )}
+                  </Link>
+                ))
+              )}
+            </SectionCard>
             <SectionCard
               id="personal-details"
               title="Personal Details"
@@ -400,42 +436,6 @@ export default async function MembershipPage() {
                     </div>
                   )}
                 </>
-              )}
-            </SectionCard>
-            <SectionCard id="my-events" title="My Events" icon={<FiCalendar />}>
-              {myEvents.length === 0 ? (
-                <p className="sm:col-span-2 text-sm text-slate-600">
-                  You&apos;re not subscribed to any upcoming events.
-                </p>
-              ) : (
-                myEvents.map((event) => (
-                  <Link
-                    key={event.documentId}
-                    href={`/events/${event.slug}`}
-                    className="p-4 rounded-2xl bg-slate-50/70 border border-slate-200 transition-colors hover:border-footloose"
-                  >
-                    <p className="text-sm font-semibold text-slate-900 truncate">
-                      {event.name}
-                    </p>
-                    <p className="mt-1 flex items-center gap-1.5 text-xs text-slate-600">
-                      <FiCalendar className="h-3.5 w-3.5 shrink-0" />
-                      {new Intl.DateTimeFormat("en-GB", {
-                        weekday: "short",
-                        day: "numeric",
-                        month: "long",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        timeZone: "Europe/Amsterdam",
-                      }).format(new Date(event.date))}
-                    </p>
-                    {event.location && (
-                      <p className="mt-1 flex items-center gap-1.5 text-xs text-slate-600">
-                        <FiMapPin className="h-3.5 w-3.5 shrink-0" />
-                        {event.location}
-                      </p>
-                    )}
-                  </Link>
-                ))
               )}
             </SectionCard>
           </div>
