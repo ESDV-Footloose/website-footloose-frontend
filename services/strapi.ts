@@ -88,11 +88,82 @@ export type StrapiSmallBanner = {
 };
 
 /**
+ * Strapi structure of a hall that can be reserved.
+ *
+ * @internal
+ */
+export type StrapiHall = {
+  /**
+   * Display name of the hall, unique within its hall reservation component.
+   */
+  name: string;
+  /**
+   * The Google calendar reservations made by members through the website are added to.
+   */
+  pendingCalendarId: string;
+  /**
+   * The Google calendar with the reservations and activities the board enters directly.
+   */
+  confirmedCalendarId: string;
+  /**
+   * Hex color of the reservations made by members.
+   */
+  pendingColor: string;
+  /**
+   * Hex color of the events the board entered.
+   */
+  confirmedColor: string;
+  /**
+   * Earliest start time of a reservation (hh:mm:ss.SSS), or null if there is none.
+   */
+  earliestStartTime: string | null;
+  /**
+   * Shown under the hall in the form, instead of the summary of its restrictions.
+   */
+  note: string | null;
+  /**
+   * The days on which a reservation may start, or null if the hall is open every day.
+   */
+  daysOpen: {
+    monday: boolean;
+    tuesday: boolean;
+    wednesday: boolean;
+    thursday: boolean;
+    friday: boolean;
+    saturday: boolean;
+    sunday: boolean;
+  } | null;
+};
+
+/**
+ * Strapi hall reservation structure: the calendar of the halls and the reservation form.
+ *
+ * @internal
+ */
+export type StrapiHallReservation = {
+  /**
+   * The hall reservation component.
+   */
+  __component: "page.hall-reservation";
+  /**
+   * ID of the component, which changes whenever the page is published.
+   */
+  id: number;
+  /**
+   * The halls that are shown and can be reserved.
+   */
+  hall: StrapiHall[];
+};
+
+/**
  * Union of all possible page section components.
  *
  * @internal
  */
-export type StrapiPageSection = StrapiSection | StrapiSmallBanner;
+export type StrapiPageSection =
+  | StrapiSection
+  | StrapiSmallBanner
+  | StrapiHallReservation;
 
 /**
  * Strapi page structure.
@@ -115,7 +186,7 @@ export type StrapiPage = {
   /**
    * Ordered list of page sections.
    */
-  pageSections: StrapiSection[];
+  pageSections: StrapiPageSection[];
 };
 
 /**
@@ -256,6 +327,20 @@ export function mapNavbar(items: StrapiComponent[]): NavItem[] {
 }
 
 /**
+ * How each page section component is populated.
+ * Strapi only returns the components listed here, so every component that
+ * can be added to a page needs an entry.
+ *
+ * @internal
+ */
+const PAGE_SECTION_POPULATE: Record<StrapiPageSection["__component"], string> = {
+  "page.section": "[populate]=*",
+  "page.banner": "[populate]=*",
+  // The halls contain the days they are open, which is nested one level deeper.
+  "page.hall-reservation": "[populate][hall][populate]=*",
+};
+
+/**
  * Fetches a page by slug from Strapi and maps its sections into typed structures.
  *
  * @internal
@@ -263,8 +348,13 @@ export function mapNavbar(items: StrapiComponent[]): NavItem[] {
  * @returns Typed page data, or null when no matching page is found.
  */
 export async function getPage(slug: string): Promise<StrapiPage | null> {
+  const populate = Object.entries(PAGE_SECTION_POPULATE)
+    .map(
+      ([component, fields]) => `populate[pageSections][on][${component}]${fields}`,
+    )
+    .join("&");
   const res = await fetchAPI(
-    `pages?filters[slug][$eq]=${slug}&populate[pageSections][populate]=*`,
+    `pages?filters[slug][$eq]=${encodeURIComponent(slug)}&${populate}`,
   );
 
   const item = res?.data?.[0];

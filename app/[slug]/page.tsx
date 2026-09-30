@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { getPage, type StrapiPageSection } from "@/services/strapi";
 import RichText from "@/components/modules/RichText";
 import SmallBanner from "@/components/modules/SmallBanner";
+import HallReservations from "@/components/hall-reservations/HallReservations";
 
 /**
  * Renders a single page section based on its component type
@@ -10,14 +11,28 @@ import SmallBanner from "@/components/modules/SmallBanner";
  * @internal
  * @param section The page section to render.
  * @param index The index used as the React key.
+ * @param slug The slug of the page the section is on.
  * @returns The rendered section component, or null for unknown component.
  */
-function renderSection(section: StrapiPageSection, index: number) {
+function renderSection(
+  section: StrapiPageSection,
+  index: number,
+  slug: string,
+) {
   switch (section.__component) {
     case "page.section":
       return <RichText key={index} content={section.content} />;
     case "page.banner":
       return <SmallBanner key={index} {...section} />;
+    case "page.hall-reservation":
+      return (
+        <HallReservations
+          key={index}
+          halls={section.hall}
+          pageSlug={slug}
+          sectionId={section.id}
+        />
+      );
     default:
       return null;
   }
@@ -58,5 +73,11 @@ export default async function Page({
   const page = await getPage(slug);
   if (!page) notFound();
 
-  return <main>{page.pageSections.map(renderSection)}</main>;
+  return (
+    <main>
+      {page.pageSections.map((section, index) =>
+        renderSection(section, index, page.slug),
+      )}
+    </main>
+  );
 }
