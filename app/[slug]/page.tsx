@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { getPage, type StrapiPageSection } from "@/services/strapi";
 import RichText from "@/components/modules/RichText";
 import SmallBanner from "@/components/modules/SmallBanner";
-import EventsSection from "@/components/modules/EventsSection";
+import EventsSection from "@/components/events/EventsSection";
 
 /**
  * Renders a single page section based on its component type

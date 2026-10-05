@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import BigBanner from "@/components/modules/BigBanner";
 import RichText from "@/components/modules/RichText";
 import SmallBanner from "@/components/modules/SmallBanner";
-import EventsSection from "@/components/modules/EventsSection";
+import EventsSection from "@/components/events/EventsSection";
 import { getHomepage, type StrapiHomepageSection } from "@/services/strapi";
 /**
  * Metadata for the homepage.
