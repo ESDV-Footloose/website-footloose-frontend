@@ -17,6 +17,7 @@ import {
   FiCompass,
   FiStar,
   FiLock,
+  FiMapPin,
 } from "react-icons/fi";
 
 import { authOptions } from "@/services/auth";
@@ -26,6 +27,36 @@ const STRAPI_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL?.replace(
   /\/$/,
   "",
 );
+
+type CourseSelection = {
+  courseId: string;
+  isPriority: boolean;
+};
+
+type Course = {
+  documentId: string;
+  style: string;
+  level: string;
+};
+
+type Semester = {
+  name: string;
+  registrationDeadline: string | null;
+};
+
+type SubscriptionState = {
+  semester: Semester | null;
+  subscription: { selections: CourseSelection[] } | null;
+  courses: Course[];
+};
+
+type MyEvent = {
+  documentId: string;
+  name: string;
+  slug: string;
+  date: string;
+  location: string | null;
+};
 
 export const metadata: Metadata = {
   title: "Membership | ESDV Footloose",
@@ -57,7 +88,9 @@ async function getCurrentStrapiUser(jwt: string) {
  * @param jwt The authenticated user's Strapi JWT.
  * @returns The subscription state, or null if the request fails.
  */
-async function getSubscriptionState(jwt: string) {
+async function getSubscriptionState(
+  jwt: string,
+): Promise<{ data: SubscriptionState } | null> {
   const response = await fetch(`${STRAPI_API_URL}/api/subscriptions/me`, {
     headers: { Authorization: `Bearer ${jwt}` },
     cache: "no-store",
@@ -67,7 +100,26 @@ async function getSubscriptionState(jwt: string) {
     return null;
   }
 
-  return response.json();
+  return (await response.json()) as { data: SubscriptionState };
+}
+
+/**
+ * Retrieves the upcoming events (today and later) the user is subscribed to.
+ *
+ * @param jwt The authenticated user's Strapi JWT.
+ * @returns The events response, or null if the request fails.
+ */
+async function getMyEvents(jwt: string): Promise<{ data: MyEvent[] } | null> {
+  const response = await fetch(`${STRAPI_API_URL}/api/events/myEvents`, {
+    headers: { Authorization: `Bearer ${jwt}` },
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    return null;
+  }
+
+  return (await response.json()) as { data: MyEvent[] };
 }
 
 /**
@@ -184,7 +236,11 @@ export default async function MembershipPage() {
     user.username?.[0]?.toUpperCase() ||
     "?";
 
-  const subscriptionRes = await getSubscriptionState(session.jwt);
+  const [subscriptionRes, myEventsRes] = await Promise.all([
+    getSubscriptionState(session.jwt),
+    getMyEvents(session.jwt),
+  ]);
+  const myEvents = myEventsRes?.data ?? [];
   const subState = subscriptionRes?.data ?? null;
   const semester = subState?.semester ?? null;
   const subscription = subState?.subscription ?? null;
@@ -195,11 +251,16 @@ export default async function MembershipPage() {
 
   const isRegistrationOpen =
     registrationDeadline !== null && registrationDeadline > new Date();
-  const selectionsByCourseId = subscription
-    ? new Map(subscription.selections.map((s: any) => [s.courseId, s]))
-    : new Map();
+
+  const selectionsByCourseId = new Map<string, CourseSelection>(
+    (subscription?.selections ?? []).map((s): [string, CourseSelection] => [
+      s.courseId,
+      s,
+    ]),
+  );
 
   const quickLinks = [
+    { label: "My Events", href: "#my-events" },
     { label: "Personal Details", href: "#personal-details" },
     { label: "Institution Details", href: "#institution-details" },
     { label: "Membership Status", href: "#membership-status" },
@@ -268,6 +329,42 @@ export default async function MembershipPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
           <div className="lg:col-span-2 space-y-6">
+            <SectionCard id="my-events" title="My Events" icon={<FiCalendar />}>
+              {myEvents.length === 0 ? (
+                <p className="sm:col-span-2 text-sm text-slate-600">
+                  You&apos;re not subscribed to any upcoming events.
+                </p>
+              ) : (
+                myEvents.map((event) => (
+                  <Link
+                    key={event.documentId}
+                    href={`/events/${event.slug}`}
+                    className="p-4 rounded-2xl bg-slate-50/70 border border-slate-200 transition-colors hover:border-footloose"
+                  >
+                    <p className="text-sm font-semibold text-slate-900 truncate">
+                      {event.name}
+                    </p>
+                    <p className="mt-1 flex items-center gap-1.5 text-xs text-slate-600">
+                      <FiCalendar className="h-3.5 w-3.5 shrink-0" />
+                      {new Intl.DateTimeFormat("en-GB", {
+                        weekday: "short",
+                        day: "numeric",
+                        month: "long",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        timeZone: "Europe/Amsterdam",
+                      }).format(new Date(event.date))}
+                    </p>
+                    {event.location && (
+                      <p className="mt-1 flex items-center gap-1.5 text-xs text-slate-600">
+                        <FiMapPin className="h-3.5 w-3.5 shrink-0" />
+                        {event.location}
+                      </p>
+                    )}
+                  </Link>
+                ))
+              )}
+            </SectionCard>
             <SectionCard
               id="personal-details"
               title="Personal Details"
@@ -511,9 +608,9 @@ export default async function MembershipPage() {
 
                     <div className="space-y-2">
                       {[...selectionsByCourseId.entries()].map(
-                        ([courseId, sel]: [string, any]) => {
-                          const course = (subState.courses ?? []).find(
-                            (c: any) => c.documentId === courseId,
+                        ([courseId, sel]) => {
+                          const course = (subState?.courses ?? []).find(
+                            (c) => c.documentId === courseId,
                           );
                           if (!course) return null;
                           return (
