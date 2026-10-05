@@ -110,7 +110,7 @@ async function getSubscriptionState(
  * @returns The events response, or null if the request fails.
  */
 async function getMyEvents(jwt: string): Promise<{ data: MyEvent[] } | null> {
-  const response = await fetch(`${STRAPI_API_URL}/api/events/mine`, {
+  const response = await fetch(`${STRAPI_API_URL}/api/events/myEvents`, {
     headers: { Authorization: `Bearer ${jwt}` },
     cache: "no-store",
   });
