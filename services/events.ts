@@ -5,6 +5,8 @@ const STRAPI_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL?.replace(
   "",
 );
 
+const STRAPI_API_TOKEN = process.env.STRAPI_API_TOKEN;
+
 export const EVENTS_PAGE_SIZE = 6;
 export const EVENTS_MAX_PAGE_SIZE = 50;
 
@@ -12,6 +14,18 @@ type StrapiEventsResponse = {
   data: EventListItem[];
   meta: { hasMore: boolean };
 };
+
+/**
+ * Builds the Authorization header for event requests.
+ *
+ * @param jwt Optional Strapi JWT of the signed-in user. Without it, the
+ * frontend's API token is used
+ * @returns The headers to send to Strapi.
+ */
+export function eventAuthHeaders(jwt?: string): HeadersInit {
+  const token = jwt ?? STRAPI_API_TOKEN;
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
 
 /**
  * Fetches one page of upcoming events from Strapi.
@@ -28,9 +42,9 @@ export async function fetchEventsPage(
   pageSize: number,
 ): Promise<EventsPage> {
   const res = await fetch(
-    `${STRAPI_API_URL}/api/events/list?page=${page}&pageSize=${pageSize}`,
+    `${STRAPI_API_URL}/api/events?page=${page}&pageSize=${pageSize}`,
     {
-      headers: jwt ? { Authorization: `Bearer ${jwt}` } : {},
+      headers: eventAuthHeaders(jwt),
       cache: "no-store",
     },
   );
