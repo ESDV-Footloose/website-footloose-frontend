@@ -11,6 +11,7 @@ import {
 } from "react-icons/fi";
 
 import { authOptions } from "@/services/auth";
+import { eventAuthHeaders } from "@/services/events";
 import { getPageBanner } from "@/services/strapi";
 import RichText from "@/components/modules/RichText";
 import SmallBanner from "@/components/modules/SmallBanner";
@@ -55,8 +56,8 @@ const formatDateTime = (date: string) =>
  * @returns The event data, or null if the request fails.
  */
 async function getEvent(slug: string, jwt?: string) {
-  const res = await fetch(`${STRAPI_API_URL}/api/events/slug/${slug}`, {
-    headers: jwt ? { Authorization: `Bearer ${jwt}` } : {},
+  const res = await fetch(`${STRAPI_API_URL}/api/events/${slug}`, {
+    headers: eventAuthHeaders(jwt),
     cache: "no-store",
   });
   if (!res.ok) return null;
@@ -181,13 +182,13 @@ export default async function EventDetailPage({
                 </div>
               )}
 
-              {/** Spots taken + attendees list if authenticated */}
+              {/** Spots taken + attendees list if approved member */}
               {event.requiresSubscription ? (
                 <>
                   <div className="flex items-start gap-3">
                     <FiUsers className="mt-0.5 h-4 w-4 shrink-0 text-footloose" />
 
-                    {isLoggedIn ? (
+                    {event.isMember ? (
                       <details className="group">
                         <summary className="flex cursor-pointer list-none items-center gap-1">
                           <p className="text-sm font-semibold text-slate-800">
