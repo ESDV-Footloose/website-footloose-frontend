@@ -47,7 +47,7 @@ export default function EventSubscribeButton({
   membersOnly: boolean;
   /** If the registration deadline has passed. */
   isRegistrationClosed: boolean;
-  /** If the deregistration deadline has pasesd. */
+  /** If the deregistration deadline has passed. */
   isDeregistrationClosed: boolean;
   /** The price applicable to the current user. */
   price: number;
@@ -118,9 +118,20 @@ export default function EventSubscribeButton({
   }
 
   /**
-   * Subscribes or unsubscribes the current user from the event.   *
+   * Subscribes or unsubscribes the current user from the event.
    */
   async function toggle() {
+    // Unsubscribing after registration has closed is a one-way action.
+    if (
+      isSubscribed &&
+      isRegistrationClosed &&
+      !window.confirm(
+        "Registration for this event has closed. If you unsubscribe, you will not be able to subscribe again. Do you want to continue?",
+      )
+    ) {
+      return;
+    }
+
     setSubmitting(true);
     setError(null);
 
