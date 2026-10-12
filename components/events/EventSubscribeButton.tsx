@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { FiCheck, FiX, FiLock } from "react-icons/fi";
 
 import Button from "@/components/modules/Button";
@@ -78,12 +77,6 @@ export default function EventSubscribeButton({
           <FiLock className="h-5 w-5" />
           Log in to subscribe
         </Button>
-        <p className="text-xs text-slate-500">
-          <Link href="/login" className="font-semibold text-footloose">
-            Log in
-          </Link>{" "}
-          to subscribe to this event.
-        </p>
       </div>
     );
   }
