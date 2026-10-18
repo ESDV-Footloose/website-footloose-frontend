@@ -34,14 +34,16 @@ export default async function EventsSection({
 
   let events: EventListItem[] = [];
   let hasMore = false;
+  let failedToLoad = false;
   try {
     ({ events, hasMore } = await fetchEventsPage(
       session?.jwt,
       1,
       previewOnly ? PREVIEW_SIZE : EVENTS_PAGE_SIZE,
     ));
-  } catch {
-    // Fall through to the empty state.
+  } catch (error) {
+    console.error("Failed to load events section", error);
+    failedToLoad = true;
   }
 
   return (
@@ -53,7 +55,13 @@ export default async function EventsSection({
           </h2>
         )}
 
-        {events.length === 0 ? (
+        {failedToLoad ? (
+          <div className="rounded-3xl bg-white p-8 shadow-xl shadow-slate-200/50 border border-slate-100 text-center">
+            <p className="text-base text-red-600">
+              Events couldn&apos;t be loaded. Please try again later.
+            </p>
+          </div>
+        ) : events.length === 0 ? (
           <div className="rounded-3xl bg-white p-8 shadow-xl shadow-slate-200/50 border border-slate-100 text-center">
             <p className="text-base text-slate-600">
               There are no events right now. Check back soon.
