@@ -39,13 +39,14 @@ function getDescriptionPreview(blocks: RichTextBlock[]): string {
  * @returns A human-readable date and time.
  */
 function formatDate(dateString: string) {
-  return new Intl.DateTimeFormat("en-UK", {
+  return new Intl.DateTimeFormat("en-GB", {
     weekday: "short",
     year: "numeric",
     month: "long",
     day: "numeric",
     hour: "2-digit",
     minute: "2-digit",
+    timeZone: "Europe/Amsterdam",
   }).format(new Date(dateString));
 }
 
