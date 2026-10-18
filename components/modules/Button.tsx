@@ -45,7 +45,7 @@ export default function Button({
 }: ButtonProps) {
   return (
     <button
-      className={`flex items-center gap-2 rounded-md border border-footloose px-4 py-2 text-white bg-footloose hover:bg-white hover:border-footloose hover:text-footloose transition-colors duration-300 hover:cursor-pointer ${className}`}
+      className={`flex items-center gap-2 rounded-md border border-footloose px-4 py-2 text-white bg-footloose hover:bg-white hover:border-footloose hover:text-footloose transition-colors duration-300 ${disabled ? "cursor-default hover:cursor-default" : "hover:cursor-pointer"} ${className}`}
       type={type}
       onClick={onClick}
       disabled={disabled}
