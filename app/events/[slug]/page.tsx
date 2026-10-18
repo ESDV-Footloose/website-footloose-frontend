@@ -76,7 +76,8 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const event = await getEvent(slug);
+  const session = await getServerSession(authOptions);
+  const event = await getEvent(slug, session?.jwt);
   return {
     title: event ? `${event.name} | ESDV Footloose` : "Event | ESDV Footloose",
   };
